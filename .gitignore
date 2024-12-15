@@ -1,0 +1,15 @@
+__pycache__
+poetry.lock
+
+.python-version
+.env
+.venv
+.poetry
+
+*-addon
+ayon-*
+
+_CLIENTS_*
+TESTING_*
+
+uv.lock

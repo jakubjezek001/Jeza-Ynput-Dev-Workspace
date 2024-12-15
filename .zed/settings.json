@@ -1,0 +1,74 @@
+// Folder-specific settings
+//
+// For a full list of overridable settings, and general information on folder-specific settings,
+// see the documentation: https://zed.dev/docs/configuring-zed#settings-files
+{
+  "preferred_line_length": 79,
+  "autosave": "on_focus_change",
+  "auto_install_extensions": {
+    "dockerfile": true,
+    "docker-compose": false,
+    "python": true,
+    "shell": true,
+    "powershell": true,
+    "ruff": true
+  },
+  "toolbar": {
+    "breadcrumbs": true,
+    "quick_actions": true
+  },
+  "calls": {
+    // Join calls with the microphone live by default
+    "mute_on_join": true,
+    // Share your project when you are the first to join a channel
+    "share_on_join": true
+  },
+  "git": {
+    "inline_blame": {
+      "enabled": true,
+      "show_commit_summary": true
+    }
+  },
+  "experimental.theme_overrides": {
+    "terminal.background": "#1e1e1e",
+    "terminal.foreground": "#d4d4d4"
+  },
+  "current_line_highlight": "all",
+  "show_inline_completions": true,
+  "show_completions_on_input": true,
+  "wrap_guides": [
+    79
+  ],
+  "formatter": "language_server",
+  "languages": {
+    "Python": {
+      "language_servers": [
+        "pyright",
+        "ruff",
+      ],
+      "format_on_save": "off",
+      "formatter": [
+        {
+          "language_server": {
+            "name": "ruff"
+          }
+        }
+      ]
+    }
+  },
+  "lsp": {
+    "ruff": {
+      "initialization_options": {
+        "settings": {
+          // Ruff server settings goes here
+          "lineLength": 79,
+          "lint": {
+            "extendSelect": [
+              "I"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
