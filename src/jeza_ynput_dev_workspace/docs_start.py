@@ -2,16 +2,13 @@ import os
 import subprocess
 
 
-def docs_initialize():
+def docs_start():
     try:
         # Change directory to ayon-documentation/website
         os.chdir('ayon-documentation/website')
 
-        # Install yarn globally via npm
-        subprocess.run(['npm', 'install', '-g', 'yarn'])
-
         # Add docusaurus as dev dependency using yarn
-        subprocess.run(['yarn', 'add', 'docusaurus', '--dev'])
+        subprocess.run(['yarn', 'start'])
 
     except subprocess.CalledProcessError as e:
         print(f"Error executing command: {e}")
