@@ -9,6 +9,7 @@ dependencies = [
     "ayon-python-api>=1.0.11",
     "click>=8.1.7",
     "clique>=2.0.0",
+    "gitpython>=3.1.43",
     "pyblish>=1.7.0",
     "python-dotenv>=1.0.1",
     "ruff>=0.8.3",
@@ -16,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 git-clone-all-repos = "jeza_ynput_dev_workspace:git_clone_all_repos"
+git-commit-info-extraction = "jeza_ynput_dev_workspace:git_commit_info_extraction"
 upload-to-addon-folder = "jeza_ynput_dev_workspace:upload_to_addon_folder"
 update-ayon-docker-local-dir = "jeza_ynput_dev_workspace:update_ayon_docker_local_dir"
 docs-initialize = "jeza_ynput_dev_workspace:docs_initialize"

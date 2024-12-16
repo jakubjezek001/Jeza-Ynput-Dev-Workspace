@@ -38,5 +38,17 @@
     "allow_concurrent_runs": true,
     "reveal": "always",
     "hide": "never"
+  },
+  {
+    "label": "Git commit info extraction",
+    "command": "uv run git-commit-info-extraction",
+    "args": [
+      "-f",
+      "$ZED_RELATIVE_FILE"
+    ],
+    "reveal": "always",
+    "use_new_terminal": true,
+    "allow_concurrent_runs": true,
+    "hide": "never"
   }
 ]
