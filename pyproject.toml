@@ -8,6 +8,7 @@ requires-python = ">=3.9.19,<3.11"
 dependencies = [
     "ayon-python-api>=1.0.11",
     "click>=8.1.7",
+    "clique>=2.0.0",
     "pyblish>=1.7.0",
     "python-dotenv>=1.0.1",
     "ruff>=0.8.3",
