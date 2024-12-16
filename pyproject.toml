@@ -17,6 +17,7 @@ dependencies = [
 [project.scripts]
 git-clone-all-repos = "jeza_ynput_dev_workspace:git_clone_all_repos"
 upload-to-addon-folder = "jeza_ynput_dev_workspace:upload_to_addon_folder"
+update-ayon-docker-local-dir = "jeza_ynput_dev_workspace:update_ayon_docker_local_dir"
 
 [build-system]
 requires = ["hatchling"]

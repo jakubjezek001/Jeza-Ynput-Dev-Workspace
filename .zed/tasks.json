@@ -18,7 +18,7 @@
   },
   {
     "label": "Update AYON server",
-    "command": "cd ayon-docker && docker compose pull server && docker compose up -d server",
+    "command": "uv run update-ayon-docker-local-dir",
     "use_new_terminal": true,
     "reveal": "always",
     "hide": "on_success"
