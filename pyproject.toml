@@ -4,7 +4,7 @@ name = "jeza-ynput-dev-workspace"
 version = "0.1.0"
 description = "My personal workspace for YNPUT development."
 readme = "README.md"
-requires-python = ">=3.9.19"
+requires-python = ">=3.9.19,<3.11"
 dependencies = [
     "ayon-python-api>=1.0.11",
     "click>=8.1.7",
@@ -47,6 +47,7 @@ executionEnvironments = [
         "ayon-circuit/client/ayon_circuit/vendor/LabLib",
         "ayon-docker/backend",
         "ayon-launcher/.venv/lib64/python3.9/site-packages",
+        "ayon-launcher/.venv/Lib/site-packages",
     ] },
 ]
 

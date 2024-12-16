@@ -1,13 +1,13 @@
 [
   {
     "label": "Git Clone all repositories",
-    "command": "git-clone-all-repos",
+    "command": "uv run git-clone-all-repos",
     "reveal": "always",
     "hide": "on_success"
   },
   {
     "label": "Upload addon to server and restart",
-    "command": "upload-to-addon-folder",
+    "command": "uv run upload-to-addon-folder",
     "args": [
       "-f",
       "$ZED_RELATIVE_FILE",
