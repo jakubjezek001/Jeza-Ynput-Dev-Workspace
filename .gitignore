@@ -13,3 +13,6 @@ _CLIENTS_*
 TESTING_*
 
 uv.lock
+
+.vscode
+*.code-workspace
