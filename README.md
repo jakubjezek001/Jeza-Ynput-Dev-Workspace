@@ -47,6 +47,9 @@ The workspace includes several pre-configured tasks that can be executed through
 - Supports debug mode with the `--debug` flag (enabled by default)
 - Task will execute in the current terminal
 - Terminal will auto-hide on successful completion
+**Requirements:**
+- Server has to have at least one service user so AYON_API_KEY can be used
+- .env file with `AYON_API_KEY` and `AYON_SERVER_URL` variables
 
 #### 3. Update AYON server
 **Purpose:** Updates the AYON server using Docker Compose.
@@ -58,6 +61,24 @@ The workspace includes several pre-configured tasks that can be executed through
   3. Restart the server container
 - Executes in a new terminal window
 - Terminal will auto-hide on successful completion
+
+#### 4. Initialize Docs
+**Purpose:** Initializes the documentation environment and dependencies.
+**Usage:**
+- Select "Initialize Docs" from the tasks menu
+- Task will instlal `yarn` if not already installed
+- Task will set up the necessary documentation structure and install all required Docusaurus dependencies
+- Uses system shell for execution
+- Terminal will auto-hide on successful completion
+
+#### 5. Start Docs
+**Purpose:** Starts the documentation server for live preview and editing.
+**Usage:**
+- Select "Start Docs" from the tasks menu
+- Launches in a new terminal window
+- Allows concurrent runs with other tasks
+- Terminal remains visible for monitoring
+- Documentation server will stay active for real-time preview
 
 ## Task Execution Behavior
 
