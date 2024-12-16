@@ -21,7 +21,8 @@ def git_commit_info_extraction(file_path: Path):
     """
     Generate commit history for the current branch in the specified repository.
 
-    REPO_PATH: Path to the git repository
+    Args:
+        file_path (Path): Relative file path to workspace root.
     """
     repo_folders = os.listdir(workspace_dir.as_posix())
 
@@ -32,11 +33,11 @@ def git_commit_info_extraction(file_path: Path):
     if first_folder.startswith("ayon-") and first_folder in repo_folders:
         repo_abs_path = workspace_dir / first_folder
     else:
-        print("No valid addon path found")
+        click.echo("Error: No valid addon path found")
         sys.exit(1)
 
     def find_parent_branch(repo):
-        """Find the parent branch (main or master)"""
+        """Find the parent branch"""
         possible_parents = ['main', 'develop']
         for parent in possible_parents:
             if parent in repo.refs:
