@@ -9,10 +9,13 @@ poetry.lock
 *-addon
 ayon-*
 
-_CLIENTS_*
-TESTING_*
+# Ignore all temporary files
+__CLIENT*
+__TEST*
+__TEMP*
 
 uv.lock
 
+# Ignore Visual Studio Code
 .vscode
 *.code-workspace
