@@ -32,15 +32,26 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         "ayon-third-party",
         "ayon-traypublisher",
         # Integration repositories
+        # comp
         "ayon-nuke",
+        "ayon-aftereffects",
+        "ayon-fusion",
+        # editorial
         "ayon-hiero",
         "ayon-resolve",
         "ayon-flame",
+        # paint
+        "ayon-photoshop",
+        # animation
+        "ayon-tvpaint",
+        "ayon-harmony",
+        # services
+        "ayon-deadline",
         "ayon-circuit",
+        # production tracking
         "ayon-ftrack",
         "ayon-syncsketch",
         "ayon-shotgrid",
-        "ayon-deadline",
         # Tool repositories
         "ayon-dependencies-tool",
         "ayon-documentation",
@@ -50,12 +61,15 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
     for repo in repositories:
         repo_path = Path(current_directory) / repo
         if repo_path.exists():
-            print(f"{repo_path} exists")
+            print(f"'{repo}' exists")
         else:
-            subprocess.run(
+            result = subprocess.run(
                 ["git", "clone", f"https://github.com/ynput/{repo}.git"]
             )
-
+            if result.returncode == 0:
+                print(f"'{repo}' cloned successfully")
+            else:
+                raise FileNotFoundError(f"Error cloning '{repo}' repository")
 
 def git_clone_all_repos() -> None:
     """Entry point for cloning all YNPUT repositories.
