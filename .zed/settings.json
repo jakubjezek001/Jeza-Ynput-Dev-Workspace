@@ -40,6 +40,10 @@
     79
   ],
   "formatter": "language_server",
+  "outline_panel": {
+    "dock": "right",
+    "button": true
+  },
   "languages": {
     "Python": {
       "language_servers": [
