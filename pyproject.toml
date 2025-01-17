@@ -1,19 +1,47 @@
 [project]
+dependencies = [
+    "aiohttp>=3.7",
+    "aiohttp-middlewares>=2.0.0",
+    "ayon-python-api>=1.0.11",
+    "arrow>=0.17",
+    "blessed>=1.17",
+    "click>=8.1.7",
+    "clique>=2.0.0",
+    "coolname>=0.1",
+    "cryptography>=39.0.0",
+    "dnspython>=2.1.0",
+    "enlighten>=1.9.0",
+    "gitpython>=3.1.43",
+    "jsonschema>=2.6.0",
+    "keyring>=22.0.1",
+    "opencolorio>=2.3.2,<2.4.0",
+    "opentimelineio>=0.16.0",
+    "pillow>=9.5.0",
+    "pyblish>=1.7.0",
+    "pyblish-base>=1.8.7",
+    "pytest>=8.3.4",
+    "python-dotenv>=1.0.1",
+    "python3-xlib>=0.1; sys_platform == 'linux'",
+    "pywin32>=301; sys_platform == 'win32'",
+    "qtawesome>=0.7.3",
+    "QtPy>=2.3.0",
+    "ruff>=0.8.3",
+    "semver>=2.13.0",
+    "six>=1.15",
+    "speedcopy>=2.1",
+    "unidecode>=1.2.0",
+    "urllib3>=1.26.16",
+    "websocket-client>=0.40.0,<2",
+    "appdirs @ git+https://github.com/ActiveState/appdirs.git@master",
+    "acre @ git+https://github.com/ynput/acre.git",
+    "mock>=5.1.0",
+]
 authors = [{ name = "Jakub Jezek", email = "jakubjezek001@gmail.com" }]
 name = "jeza-ynput-dev-workspace"
 version = "0.1.0"
 description = "My personal workspace for YNPUT development."
 readme = "README.md"
 requires-python = ">=3.9.19,<3.11"
-dependencies = [
-    "ayon-python-api>=1.0.11",
-    "click>=8.1.7",
-    "clique>=2.0.0",
-    "gitpython>=3.1.43",
-    "pyblish>=1.7.0",
-    "python-dotenv>=1.0.1",
-    "ruff>=0.8.3",
-]
 
 [project.scripts]
 git-clone-all-repos = "jeza_ynput_dev_workspace:git_clone_all_repos"
@@ -30,6 +58,9 @@ build-backend = "hatchling.build"
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 executionEnvironments = [
     { root = ".", extraPaths = [

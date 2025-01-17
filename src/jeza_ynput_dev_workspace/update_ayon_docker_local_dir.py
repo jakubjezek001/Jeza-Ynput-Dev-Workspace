@@ -12,7 +12,7 @@ def update_ayon_docker_local_dir():
         subprocess.run(['docker', 'compose', 'pull', 'server'], check=True)
 
         print("Starting server container...")
-        subprocess.run(['docker', 'compose', 'up', '-d', 'server'], check=True)
+        subprocess.run(['docker', 'compose', 'up', '-d', 'server', '--build'], check=True)
 
         print("Server successfully started!")
 
