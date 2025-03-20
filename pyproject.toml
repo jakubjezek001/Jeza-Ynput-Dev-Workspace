@@ -35,6 +35,7 @@ dependencies = [
     "appdirs @ git+https://github.com/ActiveState/appdirs.git@master",
     "acre @ git+https://github.com/ynput/acre.git",
     "mock>=5.1.0",
+    "psd-tools>=1.10.4",
 ]
 authors = [{ name = "Jakub Jezek", email = "jakubjezek001@gmail.com" }]
 name = "jeza-ynput-dev-workspace"
