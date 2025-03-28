@@ -63,8 +63,11 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         "ayon-premium-pipeline",
         "ayon-batch-publisher",
         "ynput-ops-prodman",
+<<<<<<< HEAD
         "ayon-premium-burnins",
         "OpenPype-premium"
+=======
+>>>>>>> 4b3741f688015dbb12eb5f6d5c1752a5b412c8c5
     ]
 
     # Check each repository and clone if it doesn't exist
