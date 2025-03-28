@@ -19,3 +19,9 @@ uv.lock
 # Ignore Visual Studio Code
 .vscode
 *.code-workspace
+
+OpenColorIO-Configs
+
+OpenPype-premium
+
+ynput-ops-prodman
