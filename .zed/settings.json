@@ -48,7 +48,7 @@
     "Python": {
       "language_servers": [
         "pyright",
-        "ruff",
+        "ruff"
       ],
       "format_on_save": "off",
       "formatter": [
@@ -68,14 +68,48 @@
     "ruff": {
       "initialization_options": {
         "settings": {
-          // Ruff server settings goes here
           "lineLength": 79,
           "lint": {
             "extendSelect": [
-              "I"
-            ]
+              "PTH",
+              "ANN101",
+              "ANN204",
+              "COM812",
+              "S603",
+              "ERA001",
+              "TRY003",
+              "UP006",
+              "UP007",
+              "UP035",
+              "UP045",
+              "ARG002",
+              "INP001",
+              "FIX002",
+              "TD003",
+              "S404",
+              "PLC0415",
+              "CPY001",
+              "UP045"
+            ],
+            "extendIgnore": [
+              "E402"
+            ],
+            "variableRegex": "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
           }
         }
+      }
+    },
+    "pyright": {
+      "initialization_options": {
+        "useLibraryCodeForTypes": true,
+        "typeCheckingMode": "basic",
+        "reportMissingImports": false,
+        "reportMissingTypeStubs": false,
+        "reportMissingTypeArgument": false,
+        "reportGeneralTypeIssues": false,
+        "reportOptionalSubscript": false,
+        "reportOptionalMemberAccess": false,
+        "reportOptionalCall": false
       }
     }
   }

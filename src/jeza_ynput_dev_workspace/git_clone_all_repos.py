@@ -42,6 +42,7 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         "ayon-hiero",
         "ayon-resolve",
         "ayon-flame",
+        "ayon-premiere",
         # paint
         "ayon-photoshop",
         # animation
@@ -64,7 +65,8 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         "ayon-batch-publisher",
         "ynput-ops-prodman",
         "ayon-premium-burnins",
-        "OpenPype-premium"
+        "ayon-premium-slates",
+        "OpenPype-premium",
     ]
 
     # Check each repository and clone if it doesn't exist
