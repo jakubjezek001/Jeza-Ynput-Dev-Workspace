@@ -86,6 +86,11 @@ executionEnvironments = [
     ] },
 ]
 
+
+[tool.ruff]
+line-length = 79
+indent-width = 4
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
@@ -97,34 +102,30 @@ docstring-code-line-length = "dynamic"
 [tool.ruff.lint]
 select = [
     "PTH",
-    "ANN101",
     "ANN204",
     "COM812",
+    "F401",
+    "E501",
     "S603",
     "ERA001",
-    "TRY003",
     "UP006",
     "UP007",
     "UP035",
-    "UP045",
     "ARG002",
     "INP001",
     "FIX002",
     "TD003",
     "S404",
     "PLC0415",
-    "CPY001",
-    "UP045",
+    "CPY001"
 ]
-ignore = []
 fixable = ["ALL"]
-unfixable = []
+ignore = [
+    "F402",
+    "INP001",
+    "TRY003"
+]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-[tool.ruff]
-line-length = 79
-indent-width = 4
-
 exclude = [
     ".bzr",
     ".direnv",

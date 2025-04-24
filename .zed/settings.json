@@ -47,8 +47,8 @@
   "languages": {
     "Python": {
       "language_servers": [
-        "pyright",
-        "ruff"
+        "ruff",
+        "pyright"
       ],
       "format_on_save": "off",
       "formatter": [
@@ -72,27 +72,26 @@
           "lint": {
             "extendSelect": [
               "PTH",
-              "ANN101",
               "ANN204",
               "COM812",
+              "F401",
+              "E501",
               "S603",
               "ERA001",
-              "TRY003",
               "UP006",
               "UP007",
               "UP035",
-              "UP045",
               "ARG002",
-              "INP001",
               "FIX002",
               "TD003",
               "S404",
               "PLC0415",
-              "CPY001",
-              "UP045"
+              "CPY001"
             ],
             "extendIgnore": [
-              "E402"
+              "F402",
+              "INP001",
+              "TRY003"
             ],
             "variableRegex": "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
           }
