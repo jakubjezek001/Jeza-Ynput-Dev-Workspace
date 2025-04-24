@@ -58,6 +58,6 @@
       "$ZED_RELATIVE_FILE"
     ],
     "reveal": "always",
-    "hide": "never"
+    "hide": "on_success"
   },
 ]
