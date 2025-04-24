@@ -50,5 +50,14 @@
     "use_new_terminal": true,
     "allow_concurrent_runs": true,
     "hide": "never"
-  }
+  },
+  {
+    "label": "Ruff check current file",
+    "command": "uv run ruff check",
+    "args": [
+      "$ZED_RELATIVE_FILE"
+    ],
+    "reveal": "always",
+    "hide": "never"
+  },
 ]
