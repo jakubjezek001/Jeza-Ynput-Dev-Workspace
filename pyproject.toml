@@ -112,19 +112,14 @@ select = [
     "UP007",
     "UP035",
     "ARG002",
-    "INP001",
     "FIX002",
     "TD003",
     "S404",
     "PLC0415",
-    "CPY001"
+    "CPY001",
 ]
 fixable = ["ALL"]
-ignore = [
-    "F402",
-    "INP001",
-    "TRY003"
-]
+ignore = ["F402", "INP001", "TRY003"]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 exclude = [
     ".bzr",

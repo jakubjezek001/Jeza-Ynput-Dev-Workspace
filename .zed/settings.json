@@ -6,8 +6,9 @@
   "preferred_line_length": 79,
   "autosave": "on_focus_change",
   "auto_install_extensions": {
+    "html": true,
     "dockerfile": true,
-    "docker-compose": false,
+    "docker-compose": true,
     "python": true,
     "shell": true,
     "powershell": true,
