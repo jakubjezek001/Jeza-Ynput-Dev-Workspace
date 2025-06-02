@@ -92,7 +92,8 @@
             "extendIgnore": [
               "F402",
               "INP001",
-              "TRY003"
+              "TRY003",
+              "PTH118"
             ],
             "variableRegex": "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
           }

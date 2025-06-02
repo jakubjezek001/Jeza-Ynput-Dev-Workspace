@@ -36,6 +36,7 @@ dependencies = [
     "acre @ git+https://github.com/ynput/acre.git",
     "mock>=5.1.0",
     "psd-tools>=1.10.4",
+    "platformdirs>=4.3.8",
 ]
 authors = [{ name = "Jakub Jezek", email = "jakubjezek001@gmail.com" }]
 name = "jeza-ynput-dev-workspace"
@@ -66,7 +67,6 @@ executionEnvironments = [
     { root = ".", extraPaths = [
         "ayon-docker/backend",
         "ayon-core/client",
-        "ayon-launcher/.venv/lib64/python3.9/site-packages",
         "ayon-launcher/.venv/Lib/site-packages",
         "ayon-applications/client",
         "ayon-ocio/client",
@@ -77,12 +77,14 @@ executionEnvironments = [
         "ayon-hiero/client",
         "ayon-resolve/client",
         "ayon-flame/client",
-        "ayon-circuit/client",
-        "ayon-circuit/client/ayon_circuit/vendor/LabLib",
+        "ayon-batch-delivery/client",
+        "ayon-batch-delivery/client/ayon_batchdelivery/vendor/LabLib",
         "ayon-ftrack/client",
         "ayon-syncsketch/client",
         "ayon-shotgrid/client",
         "ayon-deadline/client",
+        "ayon-openrv/client/ayon_openrv/typing",
+        "pytest-ayon",
     ] },
 ]
 
@@ -119,7 +121,7 @@ select = [
     "CPY001",
 ]
 fixable = ["ALL"]
-ignore = ["F402", "INP001", "TRY003"]
+ignore = ["F402", "INP001", "TRY003", "PTH118"]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 exclude = [
     ".bzr",

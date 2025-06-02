@@ -31,6 +31,7 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         "ayon-python-api",
         "ayon-third-party",
         "ayon-traypublisher",
+        "ayon-review",
         # Integration repositories
         # comp
         "ayon-nuke",
@@ -58,6 +59,7 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         # 3d
         "ayon-unreal",
         # Tool repositories
+        "pytest-ayon",
         "ayon-dependencies-tool",
         "ayon-documentation",
         "ayon-frontend",
@@ -66,6 +68,7 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         "ynput-ops-prodman",
         "ayon-premium-burnins",
         "ayon-premium-slates",
+        "ayon-openrv",
         "OpenPype-premium",
         "ayon-doom",
     ]
