@@ -20,12 +20,12 @@ dependencies = [
     "pyblish>=1.7.0",
     "pyblish-base>=1.8.7",
     "pytest>=8.3.4",
-    "python-dotenv>=1.0.1",
     "python3-xlib>=0.1; sys_platform == 'linux'",
     "pywin32>=301; sys_platform == 'win32'",
     "qtawesome>=0.7.3",
     "QtPy>=2.3.0",
-    "ruff>=0.8.3",
+    "ruff>=0.12.2",
+    "OpenColorIO",
     "semver>=2.13.0",
     "six>=1.15",
     "speedcopy>=2.1",
@@ -37,6 +37,8 @@ dependencies = [
     "mock>=5.1.0",
     "psd-tools>=1.10.4",
     "platformdirs>=4.3.8",
+    "debugpy>=1.8.14",
+    "python-dotenv>=1.1.1",
 ]
 authors = [{ name = "Jakub Jezek", email = "jakubjezek001@gmail.com" }]
 name = "jeza-ynput-dev-workspace"
@@ -65,12 +67,15 @@ venvPath = "."
 venv = ".venv"
 executionEnvironments = [
     { root = ".", extraPaths = [
+        "ayon-launcher/.venv/Lib/site-packages",
         "ayon-docker/backend",
         "ayon-core/client",
-        "ayon-launcher/.venv/Lib/site-packages",
+        "ayon-python-api",
+        "ayon-openrv/client/ayon_openrv/typing",
+        "ayon-openrv/client",
+        "ayon-review/client",
         "ayon-applications/client",
         "ayon-ocio/client",
-        "ayon-python-api",
         "ayon-third-party/client",
         "ayon-traypublisher/client",
         "ayon-nuke/client",
@@ -83,7 +88,6 @@ executionEnvironments = [
         "ayon-syncsketch/client",
         "ayon-shotgrid/client",
         "ayon-deadline/client",
-        "ayon-openrv/client/ayon_openrv/typing",
         "pytest-ayon",
     ] },
 ]
@@ -101,27 +105,29 @@ line-ending = "auto"
 docstring-code-format = false
 docstring-code-line-length = "dynamic"
 
-[tool.ruff.lint]
-select = [
+[tool.lint]
+select = ["E", "F", "W", "E303"]
+fixable = ["ALL"]
+ignore = [
     "PTH",
+    "ANN101",
     "ANN204",
     "COM812",
-    "F401",
-    "E501",
     "S603",
     "ERA001",
+    "TRY003",
     "UP006",
     "UP007",
     "UP035",
+    "UP045",
     "ARG002",
+    "INP001",
     "FIX002",
     "TD003",
     "S404",
     "PLC0415",
     "CPY001",
 ]
-fixable = ["ALL"]
-ignore = ["F402", "INP001", "TRY003", "PTH118"]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 exclude = [
     ".bzr",

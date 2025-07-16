@@ -1,6 +1,6 @@
 # Jeza Ynput Dev Workspace
 
-This workspace provides a streamlined development environment for YNPUT and ZED projects. It combines essential tools and automated tasks in ZED editor, allowing you to manage multiple repositories efficiently while focusing on creation rather than setup. The integrated environment simplifies your development workflow with centralized commands and tools.
+This workspace provides a streamlined developmen for YNPUT and ZED projects. It combines essential tools and automated tasks in ZED editor, allowing you to manage multiple repositories efficiently while focusing on creation rather than setup. The integrated environment simplifies your development workflow with centralized commands and tools.
 
 ## Features and Benefits
 

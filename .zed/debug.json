@@ -1,0 +1,29 @@
+// Project-local debug tasks
+//
+// For more documentation on how to configure debug tasks,
+// see: https://zed.dev/docs/debugger
+[
+  {
+    "label": "Python Active File",
+    "adapter": "Debugpy",
+    "program": "$ZED_FILE",
+    "request": "launch"
+  },
+  // debug for ayon-core /test folder with pytest and .env file
+  {
+    "label": "AYON core /tests",
+    "adapter": "Debugpy",
+    "cwd": "$ZED_WORKTREE_ROOT/ayon-core/.venv/Scripts",
+    "request": "launch",
+    "module": "pytest",
+    "args": [
+      "$ZED_WORKTREE_ROOT/ayon-core/tests"
+    ],
+    "env": {
+      "VIRTUAL_ENV": "$ZED_WORKTREE_ROOT/ayon-launcher/.venv",
+      "PYTHONPATH": "$ZED_WORKTREE_ROOT/ayon-launcher/vendor/python;$ZED_WORKTREE_ROOT/ayon-core/client/ayon_core/vendor/python;$ZED_WORKTREE_ROOT/ayon-launcher/.venv/Lib/site-packages;$ZED_WORKTREE_ROOT/.venv/Lib/site-packages;$ZED_WORKTREE_ROOT/ayon-core/client",
+      "PATH": "$ZED_WORKTREE_ROOT/ayon-launcher/.venv/Scripts;C:/Users/jakub/AppData/Local/Ynput/AYON/addons_resources/ayon_third_party/ffmpeg_windows_3d2b8241/bin;C:/Users/jakub/AppData/Local/Ynput/AYON/addons_resources/ayon_third_party/oiio_windows_b9950f5d"
+    },
+    "console": "integratedTerminal"
+  }
+]
