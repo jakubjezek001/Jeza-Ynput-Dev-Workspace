@@ -95,19 +95,6 @@
           }
         }
       }
-    },
-    "pyright": {
-      "initialization_options": {
-        "useLibraryCodeForTypes": true,
-        "typeCheckingMode": "basic",
-        "reportMissingImports": false,
-        "reportMissingTypeStubs": false,
-        "reportMissingTypeArgument": false,
-        "reportGeneralTypeIssues": false,
-        "reportOptionalSubscript": false,
-        "reportOptionalMemberAccess": false,
-        "reportOptionalCall": false
-      }
     }
   }
 }
