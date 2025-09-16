@@ -39,6 +39,8 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         "ayon-fusion",
         "ayon-silhouette",
         "ayon-mocha",
+        "ayon-openrv",
+        "ayon-xstudio",
         # editorial
         "ayon-hiero",
         "ayon-resolve",
@@ -68,9 +70,8 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         "ynput-ops-prodman",
         "ayon-premium-burnins",
         "ayon-premium-slates",
-        "ayon-openrv",
         "OpenPype-premium",
-        "ayon-doom",
+        "ayon-server-production-planner",
         "ayon-review-desktop",
     ]
 

@@ -1,14 +1,20 @@
 [
   {
     "label": "Git Clone all repositories",
-    "command": "uv run git-clone-all-repos",
+    "command": "uv",
+    "args": [
+      "run",
+      "git-clone-all-repos"
+    ],
     "reveal": "always",
     "hide": "on_success"
   },
   {
     "label": "Upload addon to server and restart",
-    "command": "uv run upload-to-addon-folder",
+    "command": "uv",
     "args": [
+      "run",
+      "upload-to-addon-folder",
       "-f",
       "$ZED_RELATIVE_FILE",
       "--debug"
@@ -18,22 +24,32 @@
   },
   {
     "label": "Update AYON server",
-    "command": "uv run update-ayon-docker-local-dir",
+    "command": "uv",
+    "args": [
+      "run",
+      "update-ayon-docker-local-dir"
+    ],
     "use_new_terminal": true,
     "reveal": "always",
     "hide": "on_success"
   },
   {
     "label": "Initialize Docs",
-    "command": "uv run docs-initialize",
-    "shell": "system",
+    "command": "uv",
+    "args": [
+      "run",
+      "docs-initialize"
+    ],
     "reveal": "always",
     "hide": "on_success"
   },
   {
     "label": "Start Docs",
-    "command": "uv run docs-start",
-    "shell": "system",
+    "command": "uv",
+    "args": [
+      "run",
+      "docs-start"
+    ],
     "use_new_terminal": true,
     "allow_concurrent_runs": true,
     "reveal": "always",
@@ -41,8 +57,10 @@
   },
   {
     "label": "Git commit info extraction",
-    "command": "uv run git-commit-info-extraction",
+    "command": "uv",
     "args": [
+      "run",
+      "git-commit-info-extraction",
       "-f",
       "$ZED_RELATIVE_FILE"
     ],
@@ -53,8 +71,11 @@
   },
   {
     "label": "Ruff check current file",
-    "command": "uv run ruff check",
+    "command": "uv",
     "args": [
+      "run",
+      "ruff",
+      "check",
       "$ZED_RELATIVE_FILE"
     ],
     "reveal": "always",
