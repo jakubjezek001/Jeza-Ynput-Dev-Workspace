@@ -58,43 +58,5 @@
       "preferred_line_length": 80,
       "soft_wrap": "preferred_line_length"
     }
-  },
-  "lsp": {
-    "ruff": {
-      "initialization_options": {
-        "settings": {
-          "lineLength": 79,
-          "lint": {
-            "extendSelect": [
-              "PTH",
-              "ANN204",
-              "COM812",
-              "F401",
-              "E501",
-              "S603",
-              "ERA001",
-              "UP006",
-              "UP007",
-              "UP035",
-              "ARG002",
-              "FIX002",
-              "TD003",
-              "S404",
-              "PLC0415",
-              "CPY001",
-              "F841"
-            ],
-            "extendIgnore": [
-              "F402",
-              "INP001",
-              "TRY003",
-              "PTH118",
-              "COM812"
-            ],
-            "variableRegex": "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-          }
-        }
-      }
-    }
   }
 }
