@@ -13,6 +13,8 @@ ayon-*
 __CLIENT*
 __TEST*
 __TEMP*
+TESTING_*
+__DB_*
 
 uv.lock
 
@@ -25,3 +27,5 @@ OpenColorIO-Configs
 OpenPype-premium
 
 ynput-ops-prodman
+pytest-ayon
+
