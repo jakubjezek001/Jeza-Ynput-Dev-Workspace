@@ -25,7 +25,13 @@ def launcher_dev_mode():
     log = logging.getLogger("launcher")
 
     # Validate required environment variables
-    required_env_vars = ["AYON_SERVER_URL", "PYTHON_EXECUTABLE"]
+    required_env_vars = [
+        "PYTHON_EXECUTABLE",
+        "AYON_SERVER_URL",
+        "AYON_STUDIO_BUNDLE_NAME",
+        "AYON_USE_DEV",
+        "AYON_DEBUG",
+    ]
     missing_vars = [var for var in required_env_vars if not os.getenv(var)]
     if missing_vars:
         log.error(f"Missing required environment variables: {', '.join(missing_vars)}")
@@ -33,7 +39,7 @@ def launcher_dev_mode():
         sys.exit(1)
 
     python_executable = os.getenv("PYTHON_EXECUTABLE")
-    
+
     # Verify Python executable exists
     if not Path(python_executable).exists():
         log.error(f"Python executable not found: {python_executable}")
@@ -70,9 +76,7 @@ def launcher_dev_mode():
         "cmd.exe",
         "/k",
         str(venv_python),
-        str(start_script),
-        "--use-dev",
-        "--debug"
+        str(start_script)
     ]
 
     log.info("="*70)
