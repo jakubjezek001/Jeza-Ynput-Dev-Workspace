@@ -73,6 +73,8 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         "OpenPype-premium",
         "ayon-server-production-planner",
         "ayon-review-desktop",
+        "ayon-sn4",
+        "ayon-ui-qt",
     ]
 
     # Check each repository and clone if it doesn't exist

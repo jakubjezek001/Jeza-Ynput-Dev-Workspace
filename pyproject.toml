@@ -55,6 +55,7 @@ upload-to-addon-folder = "jeza_ynput_dev_workspace:upload_to_addon_folder"
 update-ayon-docker-local-dir = "jeza_ynput_dev_workspace:update_ayon_docker_local_dir"
 docs-initialize = "jeza_ynput_dev_workspace:docs_initialize"
 docs-start = "jeza_ynput_dev_workspace:docs_start"
+launcher-dev-mode = "jeza_ynput_dev_workspace:launcher_dev_mode"
 
 [build-system]
 requires = ["hatchling"]

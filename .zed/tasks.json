@@ -80,5 +80,16 @@
     ],
     "reveal": "always",
     "hide": "on_success"
+  },
+  {
+    "label": "Launcher Dev Mode",
+    "command": "uv",
+    "args": [
+      "run",
+      "launcher-dev-mode",
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "hide": "never"
   }
 ]

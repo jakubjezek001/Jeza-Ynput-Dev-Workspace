@@ -4,6 +4,7 @@ from .git_clone_all_repos import git_clone_all_repos
 from .git_commit_info_extraction import git_commit_info_extraction
 from .update_ayon_docker_local_dir import update_ayon_docker_local_dir
 from .upload_to_addon_folder import upload_to_addon_folder
+from .launcher_dev_mode import launcher_dev_mode
 
 __all__ = [
     "docs_initialize",
@@ -12,4 +13,5 @@ __all__ = [
     "git_commit_info_extraction",
     "update_ayon_docker_local_dir",
     "upload_to_addon_folder",
+    "launcher_dev_mode",
 ]
