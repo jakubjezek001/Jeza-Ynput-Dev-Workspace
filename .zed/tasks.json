@@ -90,6 +90,6 @@
     ],
     "use_new_terminal": true,
     "reveal": "always",
-    "hide": "never"
+    "hide": "on_success"
   }
 ]
