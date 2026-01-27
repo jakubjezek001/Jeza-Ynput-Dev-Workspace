@@ -67,6 +67,7 @@ def launcher_dev_mode():
 
     # Copy environment variables and ensure PYTHON_EXECUTABLE is set
     env = os.environ.copy()
+    env.pop("AYON_API_KEY", None)
     env["PYTHON_EXECUTABLE"] = python_executable
 
     # Build the command: Use Poetry's venv Python directly (bypasses 'poetry run' system Python check)
