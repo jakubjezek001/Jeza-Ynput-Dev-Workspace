@@ -29,12 +29,17 @@
   {
     "label": "SN4 - ingest CSV generator",
     "adapter": "Debugpy",
-    "program": "$ZED_WORKTREE_ROOT/ayon-sn4/client/ayon_sn4/scripts/csv_generator/main.py",
+    "program": "$ZED_WORKTREE_ROOT/ayon-sn4/client/ayon_sn4/scripts/csv_generator/ui/window.py",
     "request": "launch",
     "env": {
       "VIRTUAL_ENV": "$ZED_WORKTREE_ROOT/ayon-launcher/.venv",
-      "PYTHONPATH": "$ZED_WORKTREE_ROOT/ayon-launcher/vendor/python;$ZED_WORKTREE_ROOT/ayon-core/client/ayon_core/vendor/python;$ZED_WORKTREE_ROOT/ayon-launcher/.venv/Lib/site-packages;$ZED_WORKTREE_ROOT/.venv/Lib/site-packages;$ZED_WORKTREE_ROOT/ayon-core/client",
-      "PATH": "$ZED_WORKTREE_ROOT/ayon-launcher/.venv/Scripts;C:/Users/jakub/AppData/Local/Ynput/AYON/addons_resources/ayon_third_party/ffmpeg_windows_3d2b8241/bin;C:/Users/jakub/AppData/Local/Ynput/AYON/addons_resources/ayon_third_party/oiio_windows_b9950f5d"
+      "PYTHONPATH": "$ZED_WORKTREE_ROOT/ayon-launcher/vendor/python;$ZED_WORKTREE_ROOT/ayon-core/client/ayon_core/vendor/python;$ZED_WORKTREE_ROOT/ayon-launcher/.venv/Lib/site-packages;$ZED_WORKTREE_ROOT/.venv/Lib/site-packages;$ZED_WORKTREE_ROOT/ayon-core/client;$ZED_WORKTREE_ROOT/ayon-sn4/client",
+      "PATH": "$ZED_WORKTREE_ROOT/ayon-launcher/.venv/Scripts;C:/Users/jakub/AppData/Local/Ynput/AYON/addons_resources/ayon_third_party/ffmpeg_windows_3d2b8241/bin;C:/Users/jakub/AppData/Local/Ynput/AYON/addons_resources/ayon_third_party/oiio_windows_b9950f5d",
+      "AYON_SERVER_URL": "http://localhost:5000",
+      "AYON_API_KEY": "f3ab7580f27b471bb082056bba43ff58",
+      "AYON_USE_DEV": "1",
+      "AYON_STUDIO_BUNDLE_NAME": "2025_repo_separated",
+      "AYON_BUNDLE_NAME": "2025_repo_separated"
     },
     "console": "integratedTerminal"
   }

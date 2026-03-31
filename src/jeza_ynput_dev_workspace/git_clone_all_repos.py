@@ -69,7 +69,7 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         "ayon-batch-publisher",
         "ynput-ops-prodman",
         "ayon-premium-burnins",
-        "ayon-premium-slates",
+        "ayon-slater",
         "OpenPype-premium",
         "ayon-server-production-planner",
         "ayon-review-desktop",
