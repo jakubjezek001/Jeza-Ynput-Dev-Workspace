@@ -10,6 +10,7 @@ import os
 import sys
 import subprocess
 from pathlib import Path
+import platform
 
 from dotenv import load_dotenv
 
@@ -18,13 +19,8 @@ load_dotenv()
 workspace_dir = Path(__file__).resolve().parent.parent.parent
 
 
-def launcher_dev_mode():
-    """Launch AYON launcher in dev mode using Poetry venv."""
-    level = logging.INFO
-    logging.basicConfig(level=level)
-    log = logging.getLogger("launcher")
-
-    # Validate required environment variables
+def _validate_env_vars(log: logging.Logger) -> str:
+    """Validate required environment variables and return python_executable."""
     required_env_vars = [
         "PYTHON_EXECUTABLE",
         "AYON_SERVER_URL",
@@ -34,61 +30,104 @@ def launcher_dev_mode():
     ]
     missing_vars = [var for var in required_env_vars if not os.getenv(var)]
     if missing_vars:
-        log.error(f"Missing required environment variables: {', '.join(missing_vars)}")
+        log.error(
+            "Missing required environment variables: %s",
+            ", ".join(missing_vars),
+        )
         log.error("Please ensure these are set in your .env file")
         sys.exit(1)
 
     python_executable = os.getenv("PYTHON_EXECUTABLE")
+    if python_executable is None:
+        log.error("PYTHON_EXECUTABLE environment variable is not set")
+        sys.exit(1)
 
-    # Verify Python executable exists
+    return python_executable
+
+
+def _verify_paths(
+    log: logging.Logger,
+    launcher_root: Path,
+    venv_python: Path,
+    start_script: Path,
+    python_executable: str,
+) -> None:
+    """Verify that all required paths exist."""
     if not Path(python_executable).exists():
-        log.error(f"Python executable not found: {python_executable}")
+        log.error("Python executable not found: %s", python_executable)
         log.error("Please check PYTHON_EXECUTABLE path in your .env file")
         sys.exit(1)
 
-    launcher_root = workspace_dir / "ayon-launcher"
-    poetry_venv = launcher_root / ".venv"
-    venv_python = poetry_venv / "Scripts" / "python.exe"
-    start_script = launcher_root / "start.py"
-
-    # Verify paths exist
     if not launcher_root.exists():
-        log.error(f"Launcher directory not found: {launcher_root}")
+        log.error("Launcher directory not found: %s", launcher_root)
         sys.exit(1)
 
     if not venv_python.exists():
-        log.error(f"Poetry venv Python not found at: {venv_python}")
-        log.error("Please run: cd ayon-launcher && .\\tools\\manage.ps1 create-env")
+        log.error("Poetry venv Python not found at: %s", venv_python)
+        log.error(
+            r"Please run: cd ayon-launcher && .\tools\manage.ps1 create-env"
+        )
         sys.exit(1)
 
     if not start_script.exists():
-        log.error(f"start.py not found at: {start_script}")
+        log.error("start.py not found at: %s", start_script)
         sys.exit(1)
+
+
+def launcher_dev_mode() -> None:
+    """Launch AYON launcher in dev mode using Poetry venv."""
+    level = logging.INFO
+    logging.basicConfig(level=level)
+    log = logging.getLogger("launcher")
+
+    python_executable = _validate_env_vars(log)
+
+    launcher_root = workspace_dir / "ayon-launcher"
+    poetry_venv = launcher_root / ".venv"
+
+    if platform.system() == "Windows":
+        venv_python = poetry_venv / "Scripts" / "python.exe"
+    else:
+        venv_python = poetry_venv / "bin" / "python3"
+    start_script = launcher_root / "start.py"
+
+    _verify_paths(
+        log, launcher_root, venv_python, start_script, python_executable
+    )
 
     # Copy environment variables and ensure PYTHON_EXECUTABLE is set
     env = os.environ.copy()
     env.pop("AYON_API_KEY", None)
     env["PYTHON_EXECUTABLE"] = python_executable
 
-    # Build the command: Use Poetry's venv Python directly (bypasses 'poetry run' system Python check)
+    # Build the command: Use Poetry's venv Python directly
+    # (bypasses 'poetry run' system Python check)
     # Wrap in cmd.exe /k to keep the terminal window open after execution
-    # Note: When passing as a list, cmd.exe doesn't need quotes around paths with spaces
-    cmd = [
-        "cmd.exe",
-        "/k",
-        str(venv_python),
-        str(start_script)
-    ]
+    # Note: When passing as a list, cmd.exe doesn't need quotes around
+    # paths with spaces
+    if platform.system() == "Windows":
+        cmd = [
+            "cmd.exe",
+            "/k",
+            str(venv_python),
+            str(start_script)
+        ]
+    else:
+        cmd = [
+            "bash",
+            "-c",
+            f"{venv_python} {start_script}"
+        ]
 
-    log.info("="*70)
+    log.info("=" * 70)
     log.info("AYON Launcher Dev Mode")
-    log.info("="*70)
-    log.info(f"Working directory: {launcher_root}")
-    log.info(f"Venv Python: {venv_python}")
-    log.info(f"Python executable (from .env): {python_executable}")
-    log.info(f"Start script: {start_script}")
-    log.info(f"Command: {' '.join(cmd)}")
-    log.info("="*70)
+    log.info("=" * 70)
+    log.info("Working directory: %s", launcher_root)
+    log.info("Venv Python: %s", venv_python)
+    log.info("Python executable (from .env): %s", python_executable)
+    log.info("Start script: %s", start_script)
+    log.info("Command: %s", " ".join(cmd))
+    log.info("=" * 70)
     log.info("")
     log.info("Launching in new terminal window...")
     log.info("The terminal will STAY OPEN after execution.")
@@ -97,14 +136,20 @@ def launcher_dev_mode():
 
     # Launch in a new console window
     # Use CREATE_NEW_CONSOLE to open detached terminal
+    creation_flags = (
+        0x00000010 if platform.system() == "Windows" else 0  # CREATE_NEW_CONSOLE
+    )
+
     subprocess.Popen(
         cmd,
         cwd=str(launcher_root),
         env=env,
-        creationflags=subprocess.CREATE_NEW_CONSOLE
+        creationflags=creation_flags,
     )
 
-    log.info("✓ AYON Launcher started successfully!")
+    log.info("\u2713 AYON Launcher started successfully!")
+
+
 
 
 if __name__ == "__main__":

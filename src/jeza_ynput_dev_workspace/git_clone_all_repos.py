@@ -75,6 +75,7 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         # "ayon-review-desktop",
         "ayon-sn4",
         "ayon-ui-qt",
+        "ayon-webpublisher",
     ]
 
     # Check each repository and clone if it doesn't exist
