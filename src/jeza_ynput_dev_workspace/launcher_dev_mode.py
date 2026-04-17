@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 workspace_dir = Path(__file__).resolve().parent.parent.parent
+this_filepath = Path(__file__).resolve()
 
 
 def _validate_env_vars(log: logging.Logger) -> str:
@@ -112,9 +113,16 @@ def launcher_dev_mode() -> None:
             str(venv_python),
             str(start_script)
         ]
+    elif platform.system() == "Darwin":
+        # get path to run_in_iterm.sh
+        script_path = this_filepath.parent / "run_in_iterm.sh"
+        cmd = [
+            str(script_path),
+            f"{venv_python} {start_script}"
+        ]
     else:
         cmd = [
-            "bash",
+            "zsh",
             "-c",
             f"{venv_python} {start_script}"
         ]
