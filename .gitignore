@@ -2,7 +2,7 @@ __pycache__
 poetry.lock
 
 .python-version
-.env
+.env*
 .venv
 .poetry
 
