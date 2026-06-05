@@ -1,6 +1,6 @@
 [
   {
-    "label": "utils: Git Clone all repositories",
+    "label": "Utils / Git Clone all repositories",
     "command": "uv",
     "args": [
       "run",
@@ -10,7 +10,7 @@
     "hide": "on_success"
   },
   {
-    "label": "Upload addon to server and restart",
+    "label": "Dev / Upload addon to server and restart",
     "command": "uv",
     "args": [
       "run",
@@ -23,7 +23,7 @@
     "hide": "on_success"
   },
   {
-    "label": "utils: Update AYON server",
+    "label": "Utils / Update AYON server",
     "command": "uv",
     "args": [
       "run",
@@ -34,7 +34,7 @@
     "hide": "on_success"
   },
   {
-    "label": "utils: Initialize Docs",
+    "label": "Utils / Initialize Docs",
     "command": "uv",
     "args": [
       "run",
@@ -44,7 +44,7 @@
     "hide": "on_success"
   },
   {
-    "label": "utils: Start Docs",
+    "label": "Utils / Start Docs",
     "command": "uv",
     "args": [
       "run",
@@ -56,7 +56,7 @@
     "hide": "never"
   },
   {
-    "label": "utils: Git commit info extraction",
+    "label": "Utils / Git commit info extraction",
     "command": "uv",
     "args": [
       "run",
@@ -70,7 +70,7 @@
     "hide": "never"
   },
   {
-    "label": "Ruff check current file",
+    "label": "Dev / Ruff check current file",
     "command": "uv",
     "args": [
       "run",
@@ -82,7 +82,7 @@
     "hide": "on_success"
   },
   {
-    "label": "AYON - Launch App (Compositing)",
+    "label": "AYON / Launch App (Compositing)",
     "command": "uv",
     "args": [
       "run",
@@ -96,7 +96,7 @@
     "hide": "on_success"
   },
   {
-    "label": "AYON - Launch App (Editorial)",
+    "label": "AYON / Launch App (Editorial)",
     "command": "uv",
     "args": [
       "run",
@@ -110,7 +110,7 @@
     "hide": "on_success"
   },
   {
-    "label": "Launcher Dev Mode",
+    "label": "AYON / Launcher Dev Mode",
     "command": "uv",
     "args": [
       "run",
