@@ -42,5 +42,25 @@
       "AYON_BUNDLE_NAME": "2025_repo_separated"
     },
     "console": "integratedTerminal"
+  },
+  {
+    "label": "AYON - Launch Nuke/15-2 (Nuke/compositing)",
+    "adapter": "Debugpy",
+    "program": "/Applications/AYON 1.5.4.app/Contents/MacOS/ayon",
+    "request": "launch",
+    "args": [
+      "addon",
+      "applications",
+      "launch",
+      "--app", "nuke/15-2",
+      "--folder", "shots/sq001/sh010",
+      "--project", "AY01_VFX_demo",
+      "--task", "comp"
+    ],
+    "env": {
+      "AYON_USE_DEV": "1",
+      "AYON_SERVER_URL": "http://localhost:5001"
+    },
+    "console": "integratedTerminal"
   }
 ]

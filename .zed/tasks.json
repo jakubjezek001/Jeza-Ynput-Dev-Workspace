@@ -1,6 +1,6 @@
 [
   {
-    "label": "Git Clone all repositories",
+    "label": "utils: Git Clone all repositories",
     "command": "uv",
     "args": [
       "run",
@@ -23,7 +23,7 @@
     "hide": "on_success"
   },
   {
-    "label": "Update AYON server",
+    "label": "utils: Update AYON server",
     "command": "uv",
     "args": [
       "run",
@@ -34,7 +34,7 @@
     "hide": "on_success"
   },
   {
-    "label": "Initialize Docs",
+    "label": "utils: Initialize Docs",
     "command": "uv",
     "args": [
       "run",
@@ -44,7 +44,7 @@
     "hide": "on_success"
   },
   {
-    "label": "Start Docs",
+    "label": "utils: Start Docs",
     "command": "uv",
     "args": [
       "run",
@@ -56,7 +56,7 @@
     "hide": "never"
   },
   {
-    "label": "Git commit info extraction",
+    "label": "utils: Git commit info extraction",
     "command": "uv",
     "args": [
       "run",

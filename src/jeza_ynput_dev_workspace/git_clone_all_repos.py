@@ -64,7 +64,7 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
         "pytest-ayon",
         "ayon-dependencies-tool",
         "ayon-documentation",
-        # "ayon-frontend",
+        "ayon-backend",
         "ayon-premium-pipeline",
         "ayon-batch-publisher",
         # "ynput-ops-prodman",
