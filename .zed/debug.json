@@ -43,12 +43,17 @@
     },
     "console": "integratedTerminal"
   },
+  // Launch AYON apps via CLI on macOS.
+  // Uses launch_subprocess.py shim because Debugpy cannot run compiled binaries directly
+  // (it reads 'program' as Python source - binaries contain null bytes and crash).
+  // The binary path and all CLI args live in 'args'; env vars are inherited by the subprocess.
   {
     "label": "AYON - Launch Nuke/15-2 (Nuke/compositing)",
     "adapter": "Debugpy",
-    "program": "/Applications/AYON 1.5.4.app/Contents/MacOS/ayon",
+    "program": "$ZED_WORKTREE_ROOT/.zed/launch_subprocess.py",
     "request": "launch",
     "args": [
+      "/Applications/AYON 1.5.4.app/Contents/MacOS/ayon",
       "addon",
       "applications",
       "launch",
