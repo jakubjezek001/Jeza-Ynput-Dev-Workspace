@@ -56,6 +56,7 @@ update-ayon-docker-local-dir = "jeza_ynput_dev_workspace:update_ayon_docker_loca
 docs-initialize = "jeza_ynput_dev_workspace:docs_initialize"
 docs-start = "jeza_ynput_dev_workspace:docs_start"
 launcher-dev-mode = "jeza_ynput_dev_workspace:launcher_dev_mode"
+ayon-launch-app = "jeza_ynput_dev_workspace:launch_ayon_app"
 
 [build-system]
 requires = ["hatchling"]

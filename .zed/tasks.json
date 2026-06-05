@@ -82,6 +82,34 @@
     "hide": "on_success"
   },
   {
+    "label": "AYON - Launch App (Compositing)",
+    "command": "uv",
+    "args": [
+      "run",
+      "ayon-launch-app",
+      "--project", "AY01_VFX_demo",
+      "--folder", "shots/sq001/sh010",
+      "--task", "comp"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "AYON - Launch App (Editorial)",
+    "command": "uv",
+    "args": [
+      "run",
+      "ayon-launch-app",
+      "--project", "AY01_VFX_demo",
+      "--folder", "editorial",
+      "--task", "conform"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
     "label": "Launcher Dev Mode",
     "command": "uv",
     "args": [
