@@ -1,17 +1,23 @@
-"""Launch AYON Application
+"""Launch AYON addon commands via the ayon-launcher venv.
 
-Interactive launcher for AYON-managed DCC applications (Nuke, Fusion, Flame, …).
-Uses the ayon-launcher venv Python to run start.py with the
-'addon applications launch' CLI subcommand — the same mechanism as
-launcher_dev_mode.py.
+A universal wrapper that handles env validation, path verification, and
+platform-appropriate terminal spawning for *any* AYON addon subcommand.
+All arguments are passed through verbatim to start.py with one enhancement:
+when the command is ``addon applications launch`` and --app is absent, an
+interactive numbered menu lets you pick the DCC without editing tasks.json.
 
 Aligned with launcher_dev_mode.py:
   - Reads env vars from .env via python-dotenv
   - Uses the Poetry venv Python from ayon-launcher/.venv
   - Opens in a new terminal window (iTerm on macOS, cmd.exe on Windows, zsh on Linux)
 
-When --app is omitted an interactive numbered menu is displayed so you can
-choose which DCC to open without editing any config.
+Examples (as tasks.json "args" values)::
+
+    ["addon", "applications", "launch",
+     "--project", "AY01_VFX_demo", "--folder", "shots/sq001/sh010", "--task", "comp"]
+
+    ["addon", "traypublisher", "launch",
+     "--project", "AY01_VFX_demo", "--folder-path", "/editorial", "--task-name", "edit"]
 """
 
 import logging
@@ -20,7 +26,7 @@ import platform
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import click
 from dotenv import load_dotenv
@@ -54,6 +60,24 @@ AVAILABLE_APPS = {
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
+def _get_arg_value(args: List[str], flag: str) -> Optional[str]:
+    """Return the value following *flag* in *args*, or None.
+
+    Handles both ``--flag value`` and ``--flag=value`` forms.
+    """
+    for i, arg in enumerate(args):
+        if arg == flag and i + 1 < len(args):
+            return args[i + 1]
+        if arg.startswith(f"{flag}="):
+            return arg.split("=", 1)[1]
+    return None
+
+
+def _has_flag(args: List[str], flag: str) -> bool:
+    """Return True if *flag* (or ``*flag*=...") appears anywhere in *args*."""
+    return any(arg == flag or arg.startswith(f"{flag}=") for arg in args)
+
 
 def _validate_env_vars(log: logging.Logger) -> str:
     """Validate required environment variables and return python_executable."""
@@ -108,33 +132,35 @@ def _verify_paths(
         sys.exit(1)
 
 
-def _select_app(
-    preselected: Optional[str], task: str, log: logging.Logger) -> str:
+def _select_app(task: Optional[str], log: logging.Logger) -> str:
     """Show an interactive numbered menu and return the chosen app key.
 
-    If ``preselected`` is provided it is used directly, allowing non-interactive
-    calls (e.g. ``uv run ayon-launch-app --app nuke/15-2 ...``).
+    Filters by *task* when recognised in AVAILABLE_APPS; otherwise shows
+    all apps combined as a flat list.
     """
-    if preselected:
-        log.info("App:      %s  (pre-selected via --app)", preselected)
-        return preselected
+    apps = AVAILABLE_APPS.get(task or "", [])
+    if not apps:
+        apps = [app for group in AVAILABLE_APPS.values() for app in group]
+        if task:
+            log.warning(
+                "Task '%s' not found in AVAILABLE_APPS — showing all apps.", task
+            )
 
     print()
     print("  Available applications:")
     print()
-    for i, app in enumerate(AVAILABLE_APPS.get(task, []), 1):
-        print(f"  {i}.  {app['name']:<15}  ({app['key']})")
+    for i, app in enumerate(apps, 1):
+        print(f"  {i}.  {app['name']:<20}  ({app['key']})")
     print()
 
     while True:
         try:
-            raw = input(
-                f"  Select [1-{len(AVAILABLE_APPS[task])}]: ").strip()
+            raw = input(f"  Select [1-{len(apps)}]: ").strip()
             idx = int(raw) - 1
-            if 0 <= idx < len(AVAILABLE_APPS[task]):
+            if 0 <= idx < len(apps):
                 print()
-                return AVAILABLE_APPS[task][idx]["key"]
-            print(f"  Enter a number between 1 and {len(AVAILABLE_APPS.get(task, []))}.")
+                return apps[idx]["key"]
+            print(f"  Enter a number between 1 and {len(apps)}.")
         except ValueError:
             print("  Invalid input — please enter a number.")
         except (EOFError, KeyboardInterrupt):
@@ -147,29 +173,28 @@ def _select_app(
 # Entry point
 # ---------------------------------------------------------------------------
 
-@click.command()
-@click.option(
-    "--app",
-    default=None,
-    help=(
-        "App key, e.g. 'nuke/15-2'. "
-        "Omit to get an interactive selector."
-    ),
+@click.command(
+    context_settings=dict(allow_extra_args=True, ignore_unknown_options=True)
 )
-@click.option("--project", required=True, help="AYON project name.")
-@click.option(
-    "--folder",
-    required=True,
-    help="Folder path within the project (e.g. shots/sq001/sh010).",
-)
-@click.option("--task", required=True, help="Task name (e.g. comp).")
-def launch_ayon_app(
-    app: Optional[str],
-    project: str,
-    folder: str,
-    task: str,
-) -> None:
-    """Launch an AYON-managed DCC application via the ayon-launcher venv."""
+@click.argument("addon_args", nargs=-1, type=click.UNPROCESSED)
+def launch_ayon_app(addon_args: tuple) -> None:
+    """Launch any AYON addon command via the ayon-launcher venv.
+
+    Pass the full addon subcommand and its arguments directly after the
+    command name. The script handles env validation, path verification,
+    and platform-appropriate terminal spawning.
+
+    \b
+    Examples:
+        uv run ayon-launch-app addon applications launch \\
+            --project AY01_VFX_demo --folder shots/sq001/sh010 --task comp
+
+        uv run ayon-launch-app addon traypublisher launch \\
+            --project AY01_VFX_demo --folder-path /editorial --task-name edit
+
+    For 'addon applications launch' without --app an interactive DCC selector
+    is shown, filtered by --task name when recognised in AVAILABLE_APPS.
+    """
     level = logging.INFO
     logging.basicConfig(level=level)
     log = logging.getLogger("ayon-launch-app")
@@ -187,35 +212,45 @@ def launch_ayon_app(
 
     _verify_paths(log, launcher_root, venv_python, start_script, python_executable)
 
-    log.info("=" * 70)
-    log.info("AYON Application Launcher")
-    log.info("=" * 70)
-    log.info("Project:  %s", project)
-    log.info("Folder:   %s", folder)
-    log.info("Task:     %s", task)
+    args_list = list(addon_args)
 
-    # Interactive (or direct) app selection
-    selected_app = _select_app(app, task, log)
-    log.info("App:      %s", selected_app)
+    if not args_list:
+        log.error("No addon subcommand provided.")
+        log.error(
+            "Example: uv run ayon-launch-app addon applications launch "
+            "--project PROJ --folder shots/sh010 --task comp"
+        )
+        sys.exit(1)
+
+    # -- Interactive app selector ------------------------------------------------
+    # Activates only for `addon applications launch` when --app is absent.
+    is_app_launch = (
+        args_list[:3] == ["addon", "applications", "launch"]
+        and not _has_flag(args_list, "--app")
+    )
+    if is_app_launch:
+        task_name = _get_arg_value(args_list, "--task")
+        selected_app = _select_app(task_name, log)
+        args_list += ["--app", selected_app]
+
+    # -- Logging header ----------------------------------------------------------
+    log.info("=" * 70)
+    log.info("AYON Launcher")
+    log.info("=" * 70)
+    log.info("Subcommand:    %s", " ".join(args_list[:3]))
+    for flag in ("--project", "--folder", "--folder-path", "--task", "--task-name", "--app"):
+        val = _get_arg_value(args_list, flag)
+        if val:
+            log.info("%-16s %s", flag + ":", val)
     log.info("=" * 70)
 
-    # Build core launch command using the ayon-launcher venv Python
-    launch_args = [
-        str(venv_python),
-        str(start_script),
-        "addon", "applications", "launch",
-        "--app", selected_app,
-        "--folder", folder,
-        "--project", project,
-        "--task", task,
-    ]
+    # -- Build and spawn ---------------------------------------------------------
+    launch_args = [str(venv_python), str(start_script)] + args_list
 
-    # Inherit full env, strip the API key (mirrors launcher_dev_mode.py)
     env = os.environ.copy()
     env.pop("AYON_API_KEY", None)
     env["PYTHON_EXECUTABLE"] = python_executable
 
-    # Wrap in a platform-appropriate terminal window (mirrors launcher_dev_mode.py)
     if platform.system() == "Windows":
         cmd = ["cmd.exe", "/k"] + launch_args
     elif platform.system() == "Darwin":
@@ -239,10 +274,7 @@ def launch_ayon_app(
         creationflags=creation_flags,
     )
 
-    log.info(
-        "\u2713 %s launch initiated!  (project: %s / folder: %s / task: %s)",
-        selected_app, project, folder, task,
-    )
+    log.info("\u2713 Launch initiated!")
 
 
 if __name__ == "__main__":

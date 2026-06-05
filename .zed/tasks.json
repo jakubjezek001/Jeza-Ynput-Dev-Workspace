@@ -82,11 +82,12 @@
     "hide": "on_success"
   },
   {
-    "label": "AYON / Launch App (Compositing)",
+    "label": "AYON / Launch App (comp)",
     "command": "uv",
     "args": [
       "run",
       "ayon-launch-app",
+      "addon", "applications", "launch",
       "--project", "AY01_VFX_demo",
       "--folder", "shots/sq001/sh010",
       "--task", "comp"
@@ -96,14 +97,30 @@
     "hide": "on_success"
   },
   {
-    "label": "AYON / Launch App (Editorial)",
+    "label": "AYON / Launch App (conform)",
     "command": "uv",
     "args": [
       "run",
       "ayon-launch-app",
+      "addon", "applications", "launch",
       "--project", "AY01_VFX_demo",
       "--folder", "editorial",
       "--task", "conform"
+    ],
+    "use_new_terminal": true,
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "AYON / Launch TrayPublisher (edit)",
+    "command": "uv",
+    "args": [
+      "run",
+      "ayon-launch-app",
+      "addon", "traypublisher", "launch",
+      "--project", "AY01_VFX_demo",
+      "--folder-path", "/editorial",
+      "--task-name", "edit"
     ],
     "use_new_terminal": true,
     "reveal": "always",
