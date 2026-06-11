@@ -73,6 +73,7 @@ executionEnvironments = [
         "ayon-launcher/.venv/Lib/site-packages",
         "ayon-docker/backend",
         "ayon-core/client",
+        "ayon-core/client/ayon_core/vendor/python",
         "ayon-python-api",
         "ayon-openrv/client/ayon_openrv/typing",
         "ayon-openrv/client",

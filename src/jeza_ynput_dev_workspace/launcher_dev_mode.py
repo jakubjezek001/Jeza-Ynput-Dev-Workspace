@@ -7,10 +7,10 @@ bypassing PowerShell and pyenv complexities.
 
 import logging
 import os
-import sys
-import subprocess
-from pathlib import Path
 import platform
+import subprocess
+import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -106,26 +106,29 @@ def launcher_dev_mode() -> None:
     # Wrap in cmd.exe /k to keep the terminal window open after execution
     # Note: When passing as a list, cmd.exe doesn't need quotes around
     # paths with spaces
+    use_dev_flag = "--use-dev" if os.getenv("AYON_USE_DEV") == "1" else ""
+    base_cmd = f"{venv_python} {start_script} {use_dev_flag}".strip()
+
     if platform.system() == "Windows":
         cmd = [
             "cmd.exe",
             "/k",
-            str(venv_python),
-            str(start_script)
+            base_cmd,
         ]
     elif platform.system() == "Darwin":
         # get path to run_in_iterm.sh
         script_path = this_filepath.parent / "run_in_iterm.sh"
         cmd = [
             str(script_path),
-            f"{venv_python} {start_script}"
+            base_cmd,
         ]
     else:
         cmd = [
             "zsh",
             "-c",
-            f"{venv_python} {start_script}"
+            base_cmd,
         ]
+
 
     log.info("=" * 70)
     log.info("AYON Launcher Dev Mode")
