@@ -244,8 +244,12 @@ def launch_ayon_app(addon_args: tuple) -> None:
             log.info("%-16s %s", flag + ":", val)
     log.info("=" * 70)
 
+    use_dev_flag = "--use-dev" if os.getenv("AYON_USE_DEV") == "1" else ""
+    base_cmd = f"{venv_python} {start_script} {use_dev_flag}".strip()
+    log.info(f"Base command: {base_cmd}")
+
     # -- Build and spawn ---------------------------------------------------------
-    launch_args = [str(venv_python), str(start_script)] + args_list
+    launch_args = [base_cmd, *args_list]
 
     env = os.environ.copy()
     env.pop("AYON_API_KEY", None)
