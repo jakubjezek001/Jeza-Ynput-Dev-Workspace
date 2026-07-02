@@ -52,6 +52,7 @@ requires-python = ">=3.9.19,<3.11"
 git-clone-all-repos = "jeza_ynput_dev_workspace:git_clone_all_repos"
 git-commit-info-extraction = "jeza_ynput_dev_workspace:git_commit_info_extraction"
 upload-to-addon-folder = "jeza_ynput_dev_workspace:upload_to_addon_folder"
+create-addon-package = "jeza_ynput_dev_workspace:create_addon_package"
 update-ayon-docker-local-dir = "jeza_ynput_dev_workspace:update_ayon_docker_local_dir"
 docs-initialize = "jeza_ynput_dev_workspace:docs_initialize"
 docs-start = "jeza_ynput_dev_workspace:docs_start"
@@ -91,6 +92,7 @@ executionEnvironments = [
         "ayon-ftrack/client",
         "ayon-syncsketch/client",
         "ayon-shotgrid/client",
+        "ayon-shotgrid/services/shotgrid_common",
         "ayon-deadline/client",
         "ayon-review-desktop/client",
         "pytest-ayon",

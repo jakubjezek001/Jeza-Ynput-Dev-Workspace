@@ -23,6 +23,19 @@
     "hide": "on_success"
   },
   {
+    "label": "Dev / Create addon package",
+    "command": "uv",
+    "args": [
+      "run",
+      "create-addon-package",
+      "-f",
+      "$ZED_RELATIVE_FILE",
+      "--debug"
+    ],
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
     "label": "Utils / Update AYON server",
     "command": "uv",
     "args": [
@@ -89,7 +102,7 @@
       "ayon-launch-app",
       "addon", "applications", "launch",
       "--project", "AY01_VFX_demo",
-      "--folder", "shots/sq001/sh010",
+      "--folder", "shots/sq001/sh020",
       "--task", "comp"
     ],
     "use_new_terminal": true,
