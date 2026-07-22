@@ -1,44 +1,10 @@
 {
   "preferred_line_length": 79,
-  "autosave": "on_focus_change",
-  "auto_install_extensions": {
-    "html": true,
-    "dockerfile": true,
-    "docker-compose": true,
-    "python": true,
-    "shell": true,
-    "powershell": true,
-    "ruff": true
-  },
-  "toolbar": {
-    "breadcrumbs": true,
-    "quick_actions": true
-  },
-  "calls": {
-    "mute_on_join": true,
-    "share_on_join": true
-  },
-  "git": {
-    "inline_blame": {
-      "enabled": true,
-      "show_commit_summary": true
-    }
-  },
-  "experimental.theme_overrides": {
-    "terminal.background": "#1e1e1e",
-    "terminal.foreground": "#d4d4d4"
-  },
-  "current_line_highlight": "all",
-  "show_inline_completions": true,
   "show_completions_on_input": true,
   "wrap_guides": [
     79
   ],
   "formatter": "language_server",
-  "outline_panel": {
-    "dock": "right",
-    "button": true
-  },
   "languages": {
     "Python": {
       "language_servers": [
@@ -56,7 +22,7 @@
     },
     "Markdown": {
       "preferred_line_length": 80,
-      "soft_wrap": "preferred_line_length"
+      "soft_wrap": "prefer_line"
     }
   }
 }

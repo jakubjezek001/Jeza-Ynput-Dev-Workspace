@@ -102,7 +102,7 @@
       "ayon-launch-app",
       "addon", "applications", "launch",
       "--project", "AY01_VFX_demo",
-      "--folder", "shots/sq001/sh020",
+      "--folder", "shots/sq001/sh010",
       "--task", "comp"
     ],
     "use_new_terminal": true,

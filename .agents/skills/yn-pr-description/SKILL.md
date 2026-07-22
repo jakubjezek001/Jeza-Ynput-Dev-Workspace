@@ -18,7 +18,7 @@ disable-model-invocation: true
 -->
 
 ## Dependency
-Close <!--Issue id-->
+Close <Issue-url>
 
 ## Related support tickets
-[<!--YN-####-->](<!--support.ayon.app url-->)
+[<YN-####>](<Support-url>)
