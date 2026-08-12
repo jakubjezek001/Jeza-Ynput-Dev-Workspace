@@ -47,6 +47,9 @@ AVAILABLE_APPS = {
         {"name": "Nuke 17.0", "key": "nuke/17-0"},
         {"name": "Photoshop 2026", "key": "photoshop/2026"},
     ],
+    "model": [
+        {"name": "Blender", "key": "blender/4-2"},
+    ],
     "conform": [
         {"name": "Hiero 15.2", "key": "hiero/15-2"},
         {"name": "Hiero 16.1", "key": "hiero/16-1"},
