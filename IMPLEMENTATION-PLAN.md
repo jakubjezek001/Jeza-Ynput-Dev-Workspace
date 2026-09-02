@@ -22,15 +22,32 @@ AYON workspace. This document is your specification.
    report instead of improvising.
 5. Anything marked **⚠ VERIFY FIRST** is code-verified but not runtime-verified.
    Run the stated experiment before building on it. If it fails, use the stated fallback.
+5b. **Everything must be reproducible.** No step in this plan may exist only as a
+   command you once typed. Every manual action you perform during Phases A–F must end
+   up as a script in `<ROOT>/src/jeza_ynput_dev_workspace/` and be reachable from a Zed
+   task. The test is Phase G: a brand-new, empty workspace folder must reach the same
+   state with **one** Zed task and no manual steps. If you cannot script it, say so
+   explicitly instead of doing it by hand.
 6. Never modify: `__TESTs/`, `.venv`, `*.worktrees/`, `worktrees/`, `.env*`, `uv.*`,
    or any `ayon-*` folder not listed in §1.
 7. Never commit to `ayon-backend`, `ayon-frontend`, `ayon-docker`.
+8. **§6 contains binding decisions, not open questions.** They were answered by the user
+   on 2026-09-02. Read §6 **before** Phase C. Do not re-ask them, and do not substitute
+   your own preference — especially the per-repo **branch table** (§6 D1). Writing to
+   the wrong branch is the single most damaging mistake available to you here.
 
 ---
 
 ## 1. Scope
 
 **Workspace root** (`<ROOT>`): `/Users/jakub/CODE/__YNPUT` — a personal, unpublished wrapper.
+
+> **`<ROOT>` is itself a git repository:** `github.com/jakubjezek001/Jeza-Ynput-Dev-Workspace`.
+> Tracked at top level: `.zed/`, `.agents/`, `src/`, `pyproject.toml`, `ruff.toml`,
+> `resources/`, `PLAN.md`, `SDD-instructions.md`. All `ayon-*` siblings are gitignored.
+> **This is what makes Phase G possible** — a future replacement for `__YNPUT` is just a
+> clone of this repo, so the workspace tooling travels with it. Treat `<ROOT>/src` as the
+> versioned, reproducible home for all workspace-level automation.
 
 | Repo | Role in this plan |
 | --- | --- |
@@ -49,7 +66,16 @@ Everything else under `<ROOT>` is out of scope.
 <ROOT>/pyproject.toml                       # [project.scripts] -> the task commands
 <ROOT>/.agents/skills/{harsh-code-review,yn-pr-description,yn-pr-update}/SKILL.md
 <ROOT>/.agents/agents/                      # empty
+```
 
+**Existing `src/` conventions — follow them for all new scripts:**
+one module per command; a module-level function of the same name as the entry point;
+`click` for argument parsing (used by `create_addon_package`, `launch_ayon_app`,
+`upload_to_addon_folder`, `git_commit_info_extraction`); Google-style docstrings with
+`Args:`/`Returns:`; exported from `__init__.py` via `__all__`; registered in
+`[project.scripts]` in `<ROOT>/pyproject.toml`; invoked from Zed as `uv run <name>`.
+
+```
 ayon-agentic-instructions/
   AGENTS.md                 # generic AYON addon instructions (already good)
   CLAUDE.md -> AGENTS.md    # committed symlink
@@ -205,30 +231,45 @@ first; they deliver the whole workflow with zero embedding infrastructure.
 
 ## 3. Target architecture
 
-Four layers. Each solves a specific failure mode.
+Five layers. Each solves a specific failure mode.
 
 ```
 L0  USER-GLOBAL          ~/.config/zed/{tasks.json,AGENTS.md}
     (no repo touched)    ~/.config/goose/AGENTS.md
                          ~/.agents/skills/  ~/.agents/agents/
     -> fixes: "I lose Zed tasks and agent context inside a repo"  (Z1,Z2,Z3,N2,N6)
+    -> GENERATED, never hand-edited: written by `ayon-sdd install-global` (Phase G)
+
+LW  WORKSPACE TOOLING    <ROOT>/src/jeza_ynput_dev_workspace/   (git: Jeza-Ynput-Dev-Workspace)
+    (the reproducer)     <ROOT>/pyproject.toml  [project.scripts]
+                         <ROOT>/.zed/tasks.json  (workspace-only tasks)
+                         <ROOT>/.githooks-shared/
+    -> every action in this plan is a script here; a new workspace root is a clone
+    -> owns the MACHINE-shaped concerns: paths, linking, hooks, global config
 
 L1  SOURCE OF TRUTH      ayon-agentic-instructions/  (git, versioned, pushable)
                          AGENTS.md, constitution, .agents/{skills,agents,checks},
-                         goose recipes, zed task fragment, addon fragments,
-                         and the sync tool
-    -> single place to edit shared SDD content
+                         goose recipes, zed task fragment, addon fragments
+    -> single place to edit shared SDD CONTENT (no machine-specific paths)
 
 L2  PER-REPO LINKAGE     <repo>/.agents-main -> ../ayon-agentic-instructions  (symlink)
     (uncommitted)        <repo>/.git/info/exclude  hides it                     (G4,G5)
                          core.hooksPath -> <ROOT>/.githooks-shared (absolute)   (G2)
                          post-checkout re-links inside new worktrees            (G1,G3)
     -> shared content reaches every repo AND every worktree, zero commits
+    -> applied by `ayon-sdd link`, never by hand
 
 L3  COMMITTED MINIMUM    <repo>/AGENTS.md                  (the ONE keystone file, X1)
     (upstreamable)       <repo>/.specify/ + speckit command sets  (optional per repo)
     -> works for teammates, CI, and the Copilot cloud agent
 ```
+
+**LW vs L1 — the split that keeps this reproducible.** Put a thing in **LW** if it
+mentions an absolute path, a machine, or a tool version. Put it in **L1** if it is
+AYON knowledge that a teammate on another machine would also want. LW is *how*, L1 is
+*what*. Violating this is what makes setups unreproducible: never hardcode
+`/Users/jakub/...` into `ayon-agentic-instructions`, and never put AYON pipeline
+conventions into `src/`.
 
 **Why L2 is uncommitted and L3 is committed:** L2 is machine-specific (absolute paths,
 a symlink to a sibling checkout) and must never appear in an upstream PR. L3 is genuinely
@@ -246,6 +287,13 @@ no symlinks to siblings, no local hooks) can see.
 ### Phase A — L0 user-global layer (no repo is touched)
 
 Highest value per unit of risk. Do this first; it alone removes the two stated limitations.
+
+> **Reproducibility rule for this phase (§0.5b):** do not hand-write these files as a
+> one-off. Author them as **templates under `<ROOT>/src/jeza_ynput_dev_workspace/templates/`**
+> and have `ayon-sdd install-global` render them into `~/.config/...`. Hand-editing is
+> allowed only while prototyping A1–A5; before Phase A is marked done, the exact same
+> result must be obtainable from `uv run ayon-sdd install-global` on a clean machine.
+> Everything in L0 is **generated output**, and the templates are the source.
 
 **A1. Global Zed tasks.**
 Create `~/.config/zed/tasks.json`. Port every task from `<ROOT>/.zed/tasks.json`, but
@@ -300,10 +348,11 @@ ln -s ~/.agents/skills/<name> <ROOT>/.agents/skills/<name>
 (it currently does **not** — that is the N1 defect).
 *Verify:* `cd <ROOT>/ayon-nuke && goose skills list | grep harsh-code-review`
 
-**A5. Enable subagents.**
-Set `GOOSE_MODE=auto` for SDD sessions, or the delegation designed in Phase E silently
-no-ops (N10). Do **not** flip the global default silently — prefer per-recipe/per-run
-scoping and tell the user what changed.
+**A5. Verify subagents are enabled — already done (§6 D3).**
+`GOOSE_MODE: auto` is **already set** in `~/.config/goose/config.yaml` (verified
+2026-09-02). **Verify only; do not modify the user's goose config.**
+*Verify:* `grep -n 'GOOSE_MODE' ~/.config/goose/config.yaml` shows `auto`. If it does
+not, report it and stop — Phase E delegation depends on it (N10).
 
 ---
 
@@ -335,10 +384,14 @@ ayon-agentic-instructions/
   recipes/                      # NEW — shared goose recipes (see Phase E)
   zed/
     tasks.fragment.json         # NEW — canonical global Zed tasks (source for A1)
-  tools/
-    ayon-sdd                    # NEW — the sync CLI (see Phase D)
   README.md
 ```
+
+> **No `tools/` here.** The `ayon-sdd` CLI lives in `<ROOT>/src` (LW), not in this repo —
+> see §3 and D5. This repo holds portable AYON *content*; anything that knows about
+> absolute paths, this machine, or this workspace belongs in `<ROOT>/src`.
+> `zed/tasks.fragment.json` is the one borderline case: keep it **path-free** (use
+> `${AYON_WORKSPACE_ROOT:...}`) so `ayon-sdd install-global` can render it anywhere.
 
 **B2. Write the AYON constitution** → `memory/ayon-constitution.md`.
 This is the Spec Kit `constitution.md` content, AYON-flavoured. Derive it from facts
@@ -402,10 +455,10 @@ self-sufficient.
 
 - **Fix the dead reference:** `ayon-nuke/AGENTS.md` currently says `.ayon-main/AGENTS.md`;
   the symlink is `.agents-main`. Correct it.
-- **`ayon-batch-delivery` conflict (X6):** it has `.github/copilot-instructions.md`,
-  which Zed picks **before** `AGENTS.md` (Z4). Either fold that content into `AGENTS.md`
-  and delete the old file, or make `copilot-instructions.md` a pointer. Do not leave two
-  divergent sources.
+- **`ayon-batch-delivery` conflict (X6) — decided (§6 D2):** fold any unique content from
+  `.github/copilot-instructions.md` into `AGENTS.md`, then **delete** the old file.
+  Zed then falls through to `AGENTS.md` (Z4), which is the fix. Note the accepted
+  regression for Copilot Chat on github.com in the commit message.
 - Generate the repo-specific sections from what is actually in each repo
   (`ruff.toml`, `create_package.py`, `pyproject.toml`, `.github/workflows/`). **Do not
   guess commands** — read them.
@@ -430,17 +483,20 @@ Verified to stack cleanly (S2). Then overwrite `.specify/memory/constitution.md`
 *Acceptance:* `goose recipe list | grep -c speckit` = 10 and
 `goose skills list | grep -c speckit` = 10 inside the repo.
 
-**C3. Decide committed vs ignored per repo — ask the user, do not assume.**
-`.specify/` + the four command sets is ~40 files. Committing them upstream to
-`ynput/*` is a policy decision.
+**C3. Commit the artifacts on the dedicated branch — decided (§6 D1).**
 
-- **Recommended:** commit in `ayon-batch-delivery` (the user's own domain addon)
-  and keep it local-only in the shared `ynput` repos until the team agrees.
-- For local-only repos, add the paths to `.git/info/exclude` (G4) — **never** to the
-  committed `.gitignore`.
+All seven target repos have a dedicated branch, so `.specify/` + the four command sets
+**and** `AGENTS.md` are **committed**, not hidden.
 
-Present the choice with this trade-off: local-only keeps upstream clean but makes the
-speckit commands invisible to the Copilot cloud agent and to CI.
+- **Assert the branch before writing** to any repo (see the §6 D1 table). `ayon-nuke`
+  uses `enhancement/developing-agentic-workflow-basic`; the other six use
+  `agentic-sdd-dev`. On mismatch, **stop and report** — never switch branches, never
+  commit to `develop`/`main`.
+- Do **not** add these paths to `.git/info/exclude` in these seven repos.
+- Commit only; **do not open PRs** to `ynput/*` — that stays a human decision.
+
+*Verify:* `git -C <repo> status --short` is clean and
+`git -C <repo> log --oneline -1` shows the SDD commit on the expected branch.
 
 ---
 
@@ -500,23 +556,50 @@ Keep `"hooks": ["create_worktree"]`, `"hide": "on_success"`.
 
 Two entry points cover both ways worktrees get made: git CLI (D1) and Zed's picker (D4).
 
-**D5. The `ayon-sdd` CLI** → `ayon-agentic-instructions/tools/ayon-sdd`.
-One idempotent tool that performs D2 and is the single implementation behind D1/D4.
-Python + `click` (already a `<ROOT>` dependency); expose it as a `[project.scripts]`
-entry in `<ROOT>/pyproject.toml` so `uv run ayon-sdd` works and Zed tasks can call it.
+**D5. The `ayon-sdd` CLI** → `<ROOT>/src/jeza_ynput_dev_workspace/ayon_sdd.py`.
+One idempotent tool that performs D2 and is the **single implementation** behind D1, D4
+and Phase G. It lives in **LW**, not in `ayon-agentic-instructions`, because every one of
+its operations is machine-shaped (absolute paths, git config, symlinks) — see §3.
+Python + `click`, following the existing `src/` conventions (§1.1). Register it in
+`__init__.py`/`__all__` and in `<ROOT>/pyproject.toml` `[project.scripts]` as
+`ayon-sdd = "jeza_ynput_dev_workspace:ayon_sdd"`, so `uv run ayon-sdd` works and Zed
+tasks can call it.
+
+**The hook and the Zed task must both be thin wrappers that shell out to this CLI.**
+Do not let `post-checkout` (D1) and the `create_worktree` task (D4) grow independent
+copies of the same logic — that is precisely the drift this plan exists to prevent.
 
 ```
 ayon-sdd link   [--repo PATH ...] [--all]  # symlinks + hooksPath + info/exclude
+ayon-sdd unlink [--repo PATH ...] [--all]  # full reversal (see §5 rollback)
 ayon-sdd status [--all]                    # what's linked/stale/missing, exit 1 if drift
 ayon-sdd init-speckit --repo PATH          # C2 for the 4 integrations
 ayon-sdd worktree-setup --worktree PATH --main PATH   # called by hook + Zed task
+ayon-sdd install-global                    # writes the whole L0 layer (Phase A)
+ayon-sdd bootstrap [--root PATH]           # Phase G: whole workspace from scratch
 ayon-sdd doctor                            # asserts every §2 invariant on this machine
 ```
+
+**Cross-cutting requirements for every subcommand** — these are what make the setup
+reproducible rather than a one-off:
+
+- **Idempotent.** Running it twice changes nothing the second time and exits 0.
+- **`--dry-run` on every mutating subcommand**, printing the exact filesystem and
+  `git config` operations. This is how the user reviews a change before it lands.
+- **No hardcoded `/Users/jakub/...`.** Resolve `<ROOT>` from the installed package
+  location or an `AYON_WORKSPACE_ROOT` override, never a literal. This is the single
+  most important rule for Phase G to work.
+- **Never destructive without `--force`.** Back up any file it would overwrite
+  (notably `~/.config/zed/tasks.json`, which may already exist).
+- Refuse to run against out-of-scope repos (§1) and hard-refuse
+  `ayon-backend`/`ayon-frontend`/`ayon-docker`.
 
 `doctor` should assert: `~/.config/zed/tasks.json` parses; `~/.config/goose/AGENTS.md`
 exists; `goose skills list` from inside a repo shows the shared skills (N1 regression
 test); each repo's `.agents-main` resolves; `check-ignore` is satisfied; `core.hooksPath`
-is absolute and exists.
+is absolute and exists. `doctor` **is the regression suite for this plan** — every
+invariant in §2 that can be asserted cheaply should become a `doctor` check, so drift is
+detected rather than discovered.
 
 *Verify:* `uv run ayon-sdd doctor` exits 0; `uv run ayon-sdd status --all` shows no drift.
 
@@ -565,7 +648,7 @@ settings:
 Reserve local models for mechanical, high-token, low-judgement work: lint triage,
 settings-drift diffing, docstring checks, packaging validation, commit/PR message drafts.
 Keep specify/plan/implement on the cloud model. Also consider `GOOSE_FAST_MODEL` for
-auxiliary calls. Remember **`GOOSE_MODE=auto`** (A5/N10) or sub-delegation won't run.
+auxiliary calls. **`GOOSE_MODE=auto`** is already set (§6 D3/A5), so sub-delegation runs.
 
 **E4. Zed and Kilo parity.**
 Spec Kit already generates Zed skills and Kilo commands (S3). Additionally symlink the
@@ -598,20 +681,173 @@ source. `chunkhound` with `nomic-embed-text` via Ollama is the lowest-maintenanc
 
 ---
 
+### Phase G — Reproducibility: scripting the whole setup and bootstrapping a new workspace root
+
+**Goal:** a future replacement for `__YNPUT` — a new, empty workspace folder on this or
+any machine — reaches the full A–F state by opening it in Zed and running **one task**.
+Nothing in this plan may survive only as a command that was typed once.
+
+This phase is not "extra work at the end". Phases A–F each *produce* a script here; G is
+where they are consolidated, ordered, and proven on a clean folder.
+
+**G0. The bootstrap chain (this is what makes it possible).**
+`<ROOT>` is itself the git repo `jakubjezek001/Jeza-Ynput-Dev-Workspace` (§1), tracking
+`.zed/`, `.agents/`, `src/` and `pyproject.toml`. So:
+
+```
+clone Jeza-Ynput-Dev-Workspace  ->  brings .zed/ + src/ + pyproject.toml
+        |
+        v
+uv sync                          ->  installs the [project.scripts] entry points
+        |
+        v
+uv run ayon-sdd bootstrap        ->  L0 + repos + L1 + L2 + speckit + verify
+```
+
+There is no chicken-and-egg problem as long as **the bootstrap entry point does not
+require an existing workspace to run**. Handle the very first step with one of these two
+verified-supported options — pick one and document it in `<ROOT>/README.md`:
+
+- **(a) Two-step, recommended:** `git clone <workspace-repo> <NEW_ROOT> && cd <NEW_ROOT> && uv sync && uv run ayon-sdd bootstrap`.
+  Boring, transparent, no packaging work.
+- **(b) One-shot standalone script:** a single self-contained
+  `src/jeza_ynput_dev_workspace/bootstrap_workspace.py` carrying **PEP 723 inline
+  script metadata** (`# /// script` … `dependencies = ["click"]` … `# ///`) so
+  `uv run <url-or-path>` executes it with zero prior install. It then performs (a).
+  ⚠ Do **not** attempt `uvx --from git+<workspace-repo> ayon-sdd`: `<ROOT>/pyproject.toml`
+  pulls heavy pins (`OpenColorIO`, `opentimelineio`, `pywin32`, git-URL deps like `acre`
+  and `appdirs`) and resolving them just to create some symlinks is slow and brittle.
+  If you want this path, first add a lightweight `[project.optional-dependencies]`
+  extra that the bootstrap alone depends on.
+
+**G1. Consolidate every manual step into `<ROOT>/src/jeza_ynput_dev_workspace/`.**
+New modules, following the existing `src/` conventions (§1.1 — one module per command,
+`click`, Google docstrings, exported in `__init__.py`, registered in
+`[project.scripts]`):
+
+| Module | Entry point | Replaces manual work from |
+| --- | --- | --- |
+| `ayon_sdd.py` | `ayon-sdd` | D5 — the umbrella CLI; all subcommands below |
+| `sdd_install_global.py` | `ayon-sdd-install-global` | **Phase A** — renders L0 from templates |
+| `sdd_link_repos.py` | `ayon-sdd-link` | **D2** — symlinks, `hooksPath`, `info/exclude` |
+| `sdd_worktree_setup.py` | `ayon-sdd-worktree-setup` | **D1/D4** — the one implementation both the git hook and the Zed task call |
+| `sdd_init_speckit.py` | `ayon-sdd-init-speckit` | **C2** — the 4 `specify init` runs |
+| `sdd_doctor.py` | `ayon-sdd-doctor` | **§7** — asserts the §2 invariants |
+| `bootstrap_workspace.py` | `ayon-workspace-bootstrap` | **G0/G3** — new root from scratch |
+| `templates/` | — | the L0 file templates (A1–A4) |
+
+Prefer subcommands on one `ayon-sdd` group over many top-level scripts; list the
+individual entry points only if the user wants them bound to separate Zed tasks.
+
+**G2. Reuse what already exists — do not duplicate it.**
+`git_clone_all_repos` already clones the full AYON repo set into the cwd. `bootstrap`
+must **call that function**, not reimplement cloning. Note it currently clones *every*
+repo and `os.chdir`s; for bootstrap you want the §1 in-scope subset and no global
+`chdir`. Refactor `initialize_all_clone()` to take an explicit repo list and target path,
+keeping the existing `git_clone_all_repos()` entry point behaviour unchanged.
+
+**G3. The bootstrap task itself.**
+`ayon-sdd bootstrap [--root PATH] [--dry-run] [--skip-clone]` runs, in order:
+
+1. **Preflight.** Assert `git`, `uv`, `zed`, `goose` are on `PATH` and report versions.
+   Warn (do not fail) if `goose`/`zed` are missing — L0 is still writable.
+2. **Resolve `<NEW_ROOT>`** from `--root`, else `$AYON_WORKSPACE_ROOT`, else cwd.
+   Refuse to run in `$HOME` or `/`.
+3. **Clone the in-scope repos** (G2) unless `--skip-clone`.
+4. **`install-global`** → the L0 layer (Phase A), backing up anything it overwrites.
+5. **Clone/locate `ayon-agentic-instructions`** → the L1 source of truth (Phase B).
+6. **`link --all`** → the L2 layer (Phase D2), incl. absolute `core.hooksPath` and
+   `.git/info/exclude` entries.
+7. **`init-speckit`** for the seven repos listed in §6 D1, asserting the expected branch
+   for each before writing (Phase C2/C3).
+8. **`doctor`** → fail loudly with a per-check report if anything is off.
+
+Every step idempotent; the whole thing safe to re-run; `--dry-run` prints the plan.
+
+**G4. The Zed task — "initialize agentic workflow here".**
+This must live in the **global** `~/.config/zed/tasks.json` (A1), because a brand-new
+empty folder has no `.zed/` of its own, and global tasks are the *only* tasks guaranteed
+to appear in every project (Z1). That is exactly the property needed here.
+
+```json
+{
+  "label": "AYON / Bootstrap agentic workspace HERE",
+  "command": "uv",
+  "args": ["run", "ayon-sdd", "bootstrap", "--root", "$ZED_WORKTREE_ROOT"],
+  "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+  "use_new_terminal": true,
+  "reveal": "always",
+  "hide": "never"
+}
+```
+
+- `cwd` points at an **existing** workspace so `uv run` resolves its `pyproject.toml`,
+  while `--root $ZED_WORKTREE_ROOT` targets the **new** folder. `cwd` outside the
+  worktree is explicitly allowed (Z7).
+- Use the `${VAR:default}` form or the task is filtered out of the modal (Z8).
+- `"hide": "never"` — this is a long, one-off operation; the user wants to read it.
+- Pair it with a `"AYON / Doctor"` task (`ayon-sdd doctor`) so verification is one
+  keystroke from anywhere.
+- **Bootstrapping the very first workspace on a fresh machine** has no existing `cwd` to
+  borrow, so it uses G0(a)/(b) from a terminal. Once *any* workspace exists, the Zed task
+  covers every subsequent one. State this limitation in the README rather than trying to
+  engineer around it.
+
+**G5. Prove it on a clean folder.** This is the acceptance test for the whole plan:
+
+```bash
+mkdir -p /tmp/ynput-repro && cd /tmp/ynput-repro
+git clone https://github.com/jakubjezek001/Jeza-Ynput-Dev-Workspace.git ws && cd ws
+uv sync
+uv run ayon-sdd bootstrap --root "$PWD" --dry-run    # review
+uv run ayon-sdd bootstrap --root "$PWD"
+uv run ayon-sdd doctor                                # must exit 0
+```
+
+Then open `/tmp/ynput-repro/ws/ayon-nuke` in Zed and confirm the §7 checklist holds
+there. Delete the folder afterwards. If any step needed a manual fix, that fix is a bug
+in G1 — fold it back into the scripts and re-run from scratch.
+
+**G6. Document it — required deliverable (§6 D5).** `<ROOT>/README.md` must contain, as
+a copy-pasteable sequence someone can follow with no prior knowledge:
+
+1. The **G0(a) chain**: `git clone <workspace-repo> && cd <ws> && uv sync && uv run
+   ayon-sdd bootstrap` — including the `--dry-run` review step and `--root` usage.
+2. `ayon-sdd bootstrap --all` for the full ~40-repo set vs the default in-scope ten
+   (§6 D6).
+3. The exact **Zed task names** (`AYON / Bootstrap agentic workspace HERE`,
+   `AYON / Doctor`) and where they come from (global `tasks.json`, A1).
+4. The **verification** step (`ayon-sdd doctor`) and how to read its report.
+5. The **fresh-machine limitation** from G4 (no existing `cwd` to borrow ⇒ first
+   workspace is bootstrapped from a terminal, every later one from the Zed task).
+6. Prerequisites: `uv`, `git`, `goose`, Zed — and that `GOOSE_MODE: auto` is required
+   (§6 D3/N10).
+
+Option (b), the standalone PEP 723 one-shot script, was **rejected** — do not build it
+and do not document it. A reproducible setup that nobody can find is not reproducible.
+
+---
+
 ## 5. Ordering, risk and rollback
 
 | Phase | Risk | Rollback |
 | --- | --- | --- |
-| A (L0 global) | Very low — touches no repo | delete the `~/.config` files |
+| A (L0 global) | Very low — touches no repo | `ayon-sdd install-global --revert`, or delete the `~/.config` files |
 | B (central) | Low — its own repo | `git revert` |
 | C (committed) | **Medium — modifies shared `ynput` repos** | branch + PR per repo; never push to `main` |
 | D (linkage) | Low — symlinks + local git config | `ayon-sdd unlink`; symlinks are ignored via `info/exclude` |
 | E (recipes) | Low | delete recipes |
 | F (CI/RAG) | Medium | revert workflows |
+| G (reproducibility) | Low — consolidation + a scratch-folder test | scripts live in the workspace repo; `git revert` |
 
 **Do Phase A first and stop for user confirmation.** It independently removes both
 limitations stated in `PLAN.md` and requires no repo changes, so it is the cheapest way
 to validate the whole direction.
+
+**Phase G is not optional and not deferrable to "later".** Write each script as its
+phase lands (§0.5b); G is the consolidation and the clean-folder proof, not the moment
+you start automating. A plan that only works because of steps someone typed once has
+failed its main requirement.
 
 **Hard gates:**
 - Do not push to any `ynput/*` repo without an explicit go-ahead. Use branches + PRs.
@@ -619,21 +855,86 @@ to validate the whole direction.
 - Do not edit any repo's committed `.gitignore` for local tooling — use
   `.git/info/exclude` (G4).
 - Re-verify D3 before depending on symlinked `.zed`.
+- **No absolute `/Users/jakub/...` literals inside any script in `<ROOT>/src`** — resolve
+  the root from the package location or `AYON_WORKSPACE_ROOT` (D5). A hardcoded home
+  directory breaks Phase G on any other machine or folder name.
+- **One implementation per behaviour.** The git hook, the Zed task and the bootstrap must
+  all call the same `ayon-sdd` subcommand.
 
 ---
 
-## 6. Open questions for the user (ask before Phase C)
+## 6. Decisions (answered by the user 2026-09-02 — these are binding)
 
-1. **Commit Spec Kit artifacts upstream?** `.specify/` + 4 command sets ≈ 40 files per
-   repo. Which repos may receive them in a PR to `ynput/*`, and which stay local-only?
-2. **`ayon-batch-delivery`:** fold `.github/copilot-instructions.md` into `AGENTS.md`,
-   or keep both with one as a pointer? (X6/Z4 — they currently conflict.)
-3. **Should `AGENTS.md` be committed to the shared `ynput` repos** (`ayon-core`,
-   `ayon-nuke`, …) or kept local? Committing is what makes CI and the Copilot cloud
-   agent work; not committing keeps upstream untouched.
-4. **`GOOSE_MODE=auto`** globally, or only for SDD recipe runs? (N10 — subagents need it.)
-5. Which addon is the pilot? Recommendation: **`ayon-batch-delivery`** — it is the user's
-   own domain addon, already has `.agents-main` + `.zed`, and has `tests/`.
+> These were open questions during Phase 1. They are now **settled**. Do not re-ask them;
+> implement exactly as stated below. Verified branch state is `[EMPIRICAL]`, checked
+> 2026-09-02.
+
+### D1 — Target repos and branches (was Q1 + Q3)
+
+Spec Kit artifacts **and** `AGENTS.md` are **committed** — not local-only — because a
+dedicated branch exists in every target repo. Work on these branches only:
+
+| Repo | Branch to commit on |
+| --- | --- |
+| `ayon-batch-delivery` | `agentic-sdd-dev` |
+| `ayon-flame` | `agentic-sdd-dev` |
+| `ayon-resolve` | `agentic-sdd-dev` |
+| `ayon-hiero` | `agentic-sdd-dev` |
+| `ayon-core` | `agentic-sdd-dev` |
+| `ayon-launcher` | `agentic-sdd-dev` |
+| **`ayon-nuke`** | **`enhancement/developing-agentic-workflow-basic`** ← *not* `agentic-sdd-dev` |
+
+**[EMPIRICAL]** All seven repos were verified checked out on exactly these branches.
+
+- **Before writing to any repo, assert the branch.** If `git -C <repo> rev-parse
+  --abbrev-ref HEAD` does not match the table, **stop and report** — do not switch
+  branches, and never commit to `develop`/`main`.
+- `.git/info/exclude` is therefore **not** used to hide `.specify/` in these seven.
+  It remains the correct tool for L2 symlinks (D3/G4).
+- No PR is opened to `ynput/*` in this phase. Committing to the branch is the deliverable;
+  raising the PR stays a manual human decision.
+
+### D2 — `ayon-batch-delivery` Copilot conflict (was Q2)
+
+**Keep only `AGENTS.md`; delete `.github/copilot-instructions.md`.** Fold any unique
+content into `AGENTS.md` first — do not lose it.
+
+This is safe and confirmed by the research, with one caveat to state in the commit message:
+
+- Zed reads `copilot-instructions.md` **before** `AGENTS.md` (Z4/X6). Deleting it makes
+  Zed fall through to `AGENTS.md` — this is precisely the fix.
+- The Copilot **cloud agent** and **VS Code** both read `AGENTS.md` natively (X2/X1).
+- ⚠ **Known regression, accepted:** Copilot **Chat on github.com** honors *only*
+  `.github/copilot-instructions.md` (X2). It will therefore see no custom instructions
+  in this repo. Accepted deliberately in favour of one source of truth.
+
+### D3 — `GOOSE_MODE=auto` (was Q4)
+
+**Already set globally** by the user in `~/.config/goose/config.yaml`
+(`GOOSE_MODE: auto`, line 199) — **[EMPIRICAL]**, verified.
+
+Phase A must therefore **verify, not set**, this value. If already `auto`, report and
+move on. Do not rewrite the user's goose config.
+
+### D4 — Pilot repo (was Q5)
+
+**`ayon-batch-delivery`** on branch `agentic-sdd-dev`. Every "pilot repo" reference in
+Phases B–F means this repo.
+
+### D5 — Bootstrap entry point (was Q6)
+
+**Option (a):** `git clone && uv sync && uv run ayon-sdd bootstrap`. Do **not** build the
+PEP 723 one-shot script.
+
+**Additional requirement:** document the full sequence in a **`README.md` at `<ROOT>`**,
+covering clone → `uv sync` → `ayon-sdd bootstrap` → verification, so a new machine or a
+future replacement for `__YNPUT` is reproducible from the README alone. This README is a
+required deliverable of Phase G, not optional.
+
+### D6 — Bootstrap clone scope (was Q7)
+
+**In-scope ten by default; `--all` for the full ~40-repo set** (the current
+`git_clone_all_repos` behaviour, which `--all` must reuse rather than reimplement).
 
 ---
 
@@ -642,12 +943,17 @@ to validate the whole direction.
 - [ ] From inside `<ROOT>/ayon-flame` opened alone in Zed: AYON tasks appear in the task
       modal, and the agent panel has the AYON personal instructions. (A1, A2)
 - [ ] `cd <ROOT>/ayon-nuke && goose skills list` lists the shared AYON skills. (A4 — fixes N1)
-- [ ] `ayon-agentic-instructions` holds the constitution, fragments, checks, recipes and
-      the `ayon-sdd` tool, and is pushed. (B)
+- [ ] `ayon-agentic-instructions` holds the constitution, fragments, checks and recipes,
+      and is pushed. (B) — note the `ayon-sdd` tool lives in `<ROOT>/src`, not here (§3)
 - [ ] Every in-scope repo has a correct, self-sufficient `AGENTS.md` with no dead
       `.ayon-main` reference. (C1)
-- [ ] In the pilot repo: `goose recipe list | grep -c speckit` = 10 and
-      `goose skills list | grep -c speckit` = 10. (C2)
+- [ ] In the pilot repo (`ayon-batch-delivery`, §6 D4): `goose recipe list | grep -c
+      speckit` = 10 and `goose skills list | grep -c speckit` = 10. (C2)
+- [ ] All seven repos in the §6 D1 table are **still on their expected branch** and have
+      the SDD artifacts committed there. No commit landed on `develop`/`main`, and no PR
+      was opened to `ynput/*`. (C3, D1)
+- [ ] `ayon-batch-delivery/.github/copilot-instructions.md` is **gone**, its unique
+      content preserved in `AGENTS.md`. (C1, §6 D2)
 - [ ] `uv run ayon-sdd doctor` exits 0 for all in-scope repos. (D5)
 - [ ] `git -C <repo> status --porcelain` is clean despite the local symlinks. (D2)
 - [ ] A new worktree — created **both** via `git worktree add` and via Zed's picker —
@@ -655,6 +961,28 @@ to validate the whole direction.
 - [ ] `goose review` runs the AYON checks in the pilot repo. (B4)
 - [ ] D3 has an explicit **verified / falsified** result recorded in this file.
 - [ ] Phase F only started after A–E are green.
+
+**Reproducibility (Phase G) — the plan is not done until all of these hold:**
+
+- [ ] Every phase-A file in `~/.config/` is reproducible from
+      `uv run ayon-sdd install-global`; none is a hand-written one-off. (A, G1)
+- [ ] All the scripts in the G1 table exist under
+      `<ROOT>/src/jeza_ynput_dev_workspace/`, are exported in `__init__.py`, and are
+      registered in `<ROOT>/pyproject.toml` `[project.scripts]`. (G1)
+- [ ] `grep -rn "/Users/jakub" <ROOT>/src` returns **nothing**. (§5 hard gate)
+- [ ] Every mutating `ayon-sdd` subcommand supports `--dry-run` and is idempotent
+      (running it twice is a no-op and exits 0). (D5)
+- [ ] The git `post-checkout` hook and the Zed `create_worktree` task both shell out to
+      `ayon-sdd worktree-setup` — no duplicated logic. (D1, D4, G1)
+- [ ] `~/.config/zed/tasks.json` contains **"AYON / Bootstrap agentic workspace HERE"**
+      and **"AYON / Doctor"**, and both appear when an arbitrary folder is opened in
+      Zed. (G4)
+- [ ] **The clean-folder proof (G5):** a fresh clone into an empty directory reaches a
+      green `ayon-sdd doctor` with **zero manual steps**, and the §7 checks above hold
+      inside it. Scratch folder deleted afterwards.
+- [ ] `<ROOT>/README.md` documents the full G0(a) chain, `--all` vs default scope, both
+      Zed task names, the `doctor` verification, the fresh-machine limitation and the
+      prerequisites. (G6, §6 D5)
 
 ---
 
