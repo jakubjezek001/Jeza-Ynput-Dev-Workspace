@@ -7,6 +7,8 @@ from .upload_to_addon_folder import upload_to_addon_folder
 from .create_addon_package import create_addon_package
 from .launcher_dev_mode import launcher_dev_mode
 from .launch_ayon_app import launch_ayon_app
+from .sdd_install_global import install_global
+from .ayon_sdd import ayon_sdd
 
 __all__ = [
     "docs_initialize",
@@ -18,4 +20,6 @@ __all__ = [
     "create_addon_package",
     "launcher_dev_mode",
     "launch_ayon_app",
+    "install_global",
+    "ayon_sdd",
 ]

@@ -31,3 +31,11 @@ pytest-ayon
 
 .chunkhound
 .DS_Store
+
+# A4 (IMPLEMENTATION-PLAN.md): shared skills live in ~/.agents/skills and are
+# symlinked back here by `uv run ayon-sdd install-global`. The symlink target
+# is a machine-specific absolute path, so it must never be committed -
+# reproduce it with install-global instead (no trailing slash, see G5).
+/.agents/skills/harsh-code-review
+/.agents/skills/yn-pr-description
+/.agents/skills/yn-pr-update

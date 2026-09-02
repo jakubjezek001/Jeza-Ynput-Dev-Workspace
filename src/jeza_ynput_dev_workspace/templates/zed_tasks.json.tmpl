@@ -1,0 +1,181 @@
+[
+  {
+    "label": "Utils / Git Clone all repositories",
+    "command": "uv",
+    "args": [
+      "run",
+      "git-clone-all-repos"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "Dev / Upload addon to server and restart",
+    "command": "uv",
+    "args": [
+      "run",
+      "upload-to-addon-folder",
+      "-f",
+      "$ZED_FILE",
+      "--debug"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "Dev / Create addon package",
+    "command": "uv",
+    "args": [
+      "run",
+      "create-addon-package",
+      "-f",
+      "$ZED_FILE",
+      "--debug"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "Utils / Update AYON server",
+    "command": "uv",
+    "args": [
+      "run",
+      "update-ayon-docker-local-dir"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "use_new_terminal": true,
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "Utils / Initialize Docs",
+    "command": "uv",
+    "args": [
+      "run",
+      "docs-initialize"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "Utils / Start Docs",
+    "command": "uv",
+    "args": [
+      "run",
+      "docs-start"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "use_new_terminal": true,
+    "allow_concurrent_runs": true,
+    "reveal": "always",
+    "hide": "never"
+  },
+  {
+    "label": "Utils / Git commit info extraction",
+    "command": "uv",
+    "args": [
+      "run",
+      "git-commit-info-extraction",
+      "-f",
+      "$ZED_FILE"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "reveal": "always",
+    "use_new_terminal": true,
+    "allow_concurrent_runs": true,
+    "hide": "never"
+  },
+  {
+    "label": "Dev / Ruff check current file",
+    "command": "uv",
+    "args": [
+      "run",
+      "ruff",
+      "check",
+      "$ZED_FILE"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "AYON / Launch App (comp)",
+    "command": "uv",
+    "args": [
+      "run",
+      "ayon-launch-app",
+      "addon", "applications", "launch",
+      "--project", "AY01_VFX_demo",
+      "--folder", "shots/sq001/sh010",
+      "--task", "comp"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "use_new_terminal": true,
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "AYON / Launch App (model)",
+    "command": "uv",
+    "args": [
+      "run",
+      "ayon-launch-app",
+      "addon", "applications", "launch",
+      "--project", "AY01_VFX_demo",
+      "--folder", "shots/sq001/sh010",
+      "--task", "model"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "use_new_terminal": true,
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "AYON / Launch App (conform)",
+    "command": "uv",
+    "args": [
+      "run",
+      "ayon-launch-app",
+      "addon", "applications", "launch",
+      "--project", "AY01_VFX_demo",
+      "--folder", "editorial",
+      "--task", "conform"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "use_new_terminal": true,
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "AYON / Launch TrayPublisher (edit)",
+    "command": "uv",
+    "args": [
+      "run",
+      "ayon-launch-app",
+      "addon", "traypublisher", "launch",
+      "--project", "AY01_VFX_demo",
+      "--folder-path", "/editorial",
+      "--task-name", "edit"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "use_new_terminal": true,
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "AYON / Launcher Dev Mode",
+    "command": "uv",
+    "args": [
+      "run",
+      "launcher-dev-mode"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "use_new_terminal": true,
+    "reveal": "always",
+    "hide": "on_success"
+  }
+]

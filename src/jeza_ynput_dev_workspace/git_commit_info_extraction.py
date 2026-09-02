@@ -15,19 +15,28 @@ workspace_dir = Path(__file__).resolve().parent.parent.parent
     "--file-path",
     "file_path",
     required=True,
-    help="Relative file path to workspace root.",
+    help="File path, relative or absolute, pointing inside the workspace.",
 )
 def git_commit_info_extraction(file_path: Path):
     """
     Generate commit history for the current branch in the specified repository.
 
     Args:
-        file_path (Path): Relative file path to workspace root.
+        file_path (Path): File path, relative or absolute, pointing inside
+            the workspace.
     """
     repo_folders = os.listdir(workspace_dir.as_posix())
 
     # get first folder from file path and check if ayon-* is in name
     file_path = Path(file_path)
+    # normalize an absolute path (e.g. Zed's $ZED_FILE) to be relative to the
+    # workspace root, so the addon-folder lookup below works either way
+    if file_path.is_absolute():
+        try:
+            file_path = file_path.relative_to(workspace_dir)
+        except ValueError:
+            click.echo(f"Error: {file_path} is not inside workspace {workspace_dir}")
+            sys.exit(1)
     # split path to get first folder
     first_folder = file_path.parts[0]
     if first_folder.startswith("ayon-") and first_folder in repo_folders:

@@ -30,7 +30,7 @@ python_exe = sys.executable
     "--file-path",
     "file_path",
     required=True,
-    help="Relative file path to workspace root.",
+    help="File path, relative or absolute, pointing inside the workspace.",
 )
 def create_addon_package(debug, file_path):
     # Set Log Level and create log object
@@ -45,6 +45,14 @@ def create_addon_package(debug, file_path):
     # get first folder from file path and check if ayon-* is in name
     addons = []
     file_path = Path(file_path)
+    # normalize an absolute path (e.g. Zed's $ZED_FILE) to be relative to the
+    # workspace root, so the addon-folder lookup below works either way
+    if file_path.is_absolute():
+        try:
+            file_path = file_path.relative_to(workspace_dir)
+        except ValueError:
+            log.error(f"File path {file_path} is not inside workspace {workspace_dir}")
+            sys.exit(1)
     # split path to get first folder
     first_folder = file_path.parts[0]
     if first_folder.startswith("ayon-"):

@@ -58,6 +58,8 @@ docs-initialize = "jeza_ynput_dev_workspace:docs_initialize"
 docs-start = "jeza_ynput_dev_workspace:docs_start"
 launcher-dev-mode = "jeza_ynput_dev_workspace:launcher_dev_mode"
 ayon-launch-app = "jeza_ynput_dev_workspace:launch_ayon_app"
+ayon-sdd = "jeza_ynput_dev_workspace:ayon_sdd"
+ayon-sdd-install-global = "jeza_ynput_dev_workspace:install_global"
 
 [build-system]
 requires = ["hatchling"]

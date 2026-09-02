@@ -1,0 +1,41 @@
+# Personal agent instructions — Jakub Jezek
+
+These instructions are loaded by Zed and goose in **every** project on this machine,
+before any project-local instructions. Keep this short: it is prepended to every
+request everywhere.
+
+## Who I am
+
+Jakub Jezek, developer working across the AYON pipeline ecosystem
+(`github.com/ynput`), primarily on host-app addons (Nuke, Flame, Resolve, Hiero) and
+workspace tooling.
+
+## The multi-repo workspace
+
+My work lives under a single workspace root, `__AYON_WORKSPACE_ROOT__`
+(`$AYON_WORKSPACE_ROOT` if set — always prefer that variable over the literal path).
+It is a personal git repo (`Jeza-Ynput-Dev-Workspace`) with many `ayon-*` sibling repos
+checked out inside it, most of them gitignored clones of `github.com/ynput/*`.
+
+- Workspace-level automation (Zed tasks, symlink/setup scripts) lives in
+  `<root>/src/jeza_ynput_dev_workspace/` and is invoked as `uv run <entry-point>` — run
+  it with `<root>` as the working directory even when the file you're editing is inside
+  a different `ayon-*` repo.
+- `ayon-backend`, `ayon-frontend`, `ayon-docker` are out of scope — never modify them.
+
+## AYON house rules
+
+- Addon anatomy: `client/`, `server/`, `package.py`, `create_package.py`.
+- Pipeline contracts (Pyblish `order`, `hosts`, `families`, `productBaseType`,
+  representations, creator/loader identifiers) are functional, not cosmetic — treat
+  renames and signature changes as multi-file, cross-repo changes.
+- Ruff is authoritative for Python style: 79 columns, 4 spaces, double quotes.
+- Do not add a test framework to an addon that doesn't already have one.
+
+## Shared AYON agentic instructions
+
+If the current repository has a `.agents-main/` entry (a symlink to a local checkout of
+`ayon-agentic-instructions`), read `.agents-main/AGENTS.md` first — it is the source of
+truth for shared AYON conventions and the SDD constitution. If it does not exist, the
+repository's own `AGENTS.md` (if present) is self-sufficient; fall back to the rules
+above.
