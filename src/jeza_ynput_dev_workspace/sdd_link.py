@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Wire (and unwire) a repo into the L2 shared-config layer — Phase D2.
+"""Wire (and unwire) a repo into the L2 shared-config layer — Phase D2/E4.
 
 Idempotently sets each in-scope repo's ``core.hooksPath`` to the shared,
 absolute hooks directory (G2), symlinks ``.agents-main`` to the local
@@ -15,6 +15,15 @@ in scope is a direct sibling of ``<ROOT>``. Linked *worktrees* of these
 repos live at a different depth, so ``ayon-sdd worktree-setup`` (D1/D4)
 performs the equivalent job with **absolute** targets instead — see that
 module's docstring.
+
+Phase E, E4 adds one more thing: each *shared* skill authored directly in
+``ayon-agentic-instructions/.agents/skills/`` (e.g. ``harsh-code-review``) is
+individually symlinked into ``<repo>/.agents/skills/<name>`` so Zed sees it
+project-locally (Z3, N3), the same symlink shape already verified to work
+with goose. The ``speckit-*`` skills are **not** touched here — those are
+real, git-tracked files written by the Spec Kit installer (S3/S4), not part
+of the central repo's own skill set, and must never be replaced by a
+symlink.
 
 Script usage:
   uv run ayon-sdd link   [--repo PATH ...] [--all] [--dry-run]
@@ -42,6 +51,36 @@ LINKS = {
 
 # No trailing slash on a symlinked directory (G5).
 EXCLUDE_ENTRIES = [f"/{name}" for name in LINKS]
+
+# Skills written by the Spec Kit installer (S3/S4) are real, git-tracked
+# files, not part of the central repo's own shared skill set — never
+# symlink over them (E4).
+SPECKIT_SKILL_PREFIX = "speckit-"
+
+
+def _discover_shared_skills(root: Path) -> list:
+    """List shared skill names to symlink into every repo (Phase E, E4).
+
+    Only skills authored directly in
+    ``ayon-agentic-instructions/.agents/skills/`` are eligible — see
+    ``SPECKIT_SKILL_PREFIX`` above for why ``speckit-*`` is excluded.
+
+    Args:
+        root (Path): resolved workspace root.
+
+    Returns:
+        list[str]: skill directory names, sorted for stable ordering.
+    """
+    skills_dir = root / CENTRAL_REPO / ".agents" / "skills"
+    if not skills_dir.is_dir():
+        return []
+    return sorted(
+        entry.name
+        for entry in skills_dir.iterdir()
+        if entry.is_dir()
+        and not entry.name.startswith(".")
+        and not entry.name.startswith(SPECKIT_SKILL_PREFIX)
+    )
 
 
 def _get_git_config(repo: Path, key: str) -> str:
@@ -188,15 +227,25 @@ def _unlink_one_path(
 
 def _update_exclude(
     repo: Path,
+    entries: list,
     add: bool,
     dry_run: bool,
     log: logging.Logger,
 ) -> None:
-    """Idempotently add or remove ``EXCLUDE_ENTRIES`` in ``.git/info/exclude``.
+    """Idempotently add or remove ``entries`` in ``.git/info/exclude``.
 
     Only entries whose corresponding path is *not* already tracked by git are
     touched — a tracked path (e.g. a committed ``.zed/settings.json``, as in
     ``ayon-batch-delivery``) is left alone entirely by ``link``/``unlink``.
+
+    Args:
+        repo (Path): repository to update.
+        entries (list[str]): ``.git/info/exclude`` entries (each already
+            formatted, e.g. ``/.agents-main`` or
+            ``/.agents/skills/harsh-code-review``, no trailing slash — G5).
+        add (bool): if set, add entries; otherwise remove them.
+        dry_run (bool): if set, only log the planned change.
+        log (logging.Logger): logger to report progress on.
     """
     exclude_path = repo / ".git" / "info" / "exclude"
     lines = (
@@ -205,7 +254,7 @@ def _update_exclude(
 
     wanted = [
         entry
-        for entry in EXCLUDE_ENTRIES
+        for entry in entries
         if not is_tracked(repo, entry.lstrip("/"))
     ]
 
@@ -216,7 +265,7 @@ def _update_exclude(
                 lines.append(entry)
                 changed = True
     else:
-        for entry in EXCLUDE_ENTRIES:
+        for entry in entries:
             if entry in lines:
                 lines.remove(entry)
                 changed = True
@@ -235,7 +284,7 @@ def _update_exclude(
 def link_one(
     repo: Path, root: Path, dry_run: bool, log: logging.Logger
 ) -> None:
-    """Perform D2 for a single repo: hooksPath, symlinks, info/exclude.
+    """Perform D2 (+ Phase E, E4 skill symlinks) for a single repo.
 
     Args:
         repo (Path): repository to wire.
@@ -256,7 +305,29 @@ def link_one(
             continue
         _link_one_path(link_path, relative_target, dry_run, log)
 
-    _update_exclude(repo, add=True, dry_run=dry_run, log=log)
+    skills = _discover_shared_skills(root)
+    skill_exclude_entries = [f"/.agents/skills/{name}" for name in skills]
+    for name in skills:
+        relative_name = f".agents/skills/{name}"
+        if is_tracked(repo, relative_name):
+            log.info(
+                f"{repo.name}: {relative_name} is tracked by git, "
+                f"link skipped by design"
+            )
+            continue
+        link_path = repo / ".agents" / "skills" / name
+        if not dry_run:
+            link_path.parent.mkdir(parents=True, exist_ok=True)
+        relative_target = f"../../.agents-main/.agents/skills/{name}"
+        _link_one_path(link_path, relative_target, dry_run, log)
+
+    _update_exclude(
+        repo,
+        EXCLUDE_ENTRIES + skill_exclude_entries,
+        add=True,
+        dry_run=dry_run,
+        log=log,
+    )
 
 
 def unlink_one(
@@ -276,7 +347,24 @@ def unlink_one(
     for name, relative_target in LINKS.items():
         _unlink_one_path(repo / name, relative_target, dry_run, log)
 
-    _update_exclude(repo, add=False, dry_run=dry_run, log=log)
+    skills = _discover_shared_skills(root)
+    skill_exclude_entries = [f"/.agents/skills/{name}" for name in skills]
+    for name in skills:
+        relative_target = f"../../.agents-main/.agents/skills/{name}"
+        _unlink_one_path(
+            repo / ".agents" / "skills" / name,
+            relative_target,
+            dry_run,
+            log,
+        )
+
+    _update_exclude(
+        repo,
+        EXCLUDE_ENTRIES + skill_exclude_entries,
+        add=False,
+        dry_run=dry_run,
+        log=log,
+    )
 
 
 @click.command(name="link")
