@@ -593,6 +593,25 @@ ayon-sdd unlink [--repo PATH ...] [--all]  # full reversal (see §5 rollback)
 ayon-sdd status [--all]                    # what's linked/stale/missing, exit 1 if drift
 ayon-sdd init-speckit --repo PATH          # C2 for the 4 integrations
 ayon-sdd worktree-setup --worktree PATH --main PATH   # called by hook + Zed task
+
+> **D4 real-world GUI verification (2026-09-03).** The `git worktree add` path (D1) was
+> verified in-session; the Zed-picker path (D4) could only be verified indirectly at the
+> time (no Screen Recording/Accessibility permission for GUI automation). The user then
+> tested it for real by creating a worktree through Zed's own picker and running the task
+> from there. Result: `uv run ayon-sdd worktree-setup ...` failed to spawn `ayon-sdd`
+> (`error: Failed to spawn: \`ayon-sdd\` / Caused by: No such file or directory`), while
+> the sibling `Dev / Upload addon to server and restart` task — using the identical
+> `"cwd": "${AYON_WORKSPACE_ROOT:...}"` token and the same `uv run <entrypoint>` pattern —
+> succeeded. Root cause could not be reproduced deterministically outside Zed (PATH,
+> login-shell env, and directory-tree project discovery were all ruled out by simulation),
+> but `create_worktree`-hook-triggered tasks fire immediately at worktree creation, a
+> different execution path from a manually-invoked task, and `uv run <name>` normally
+> resolves the project by walking up from `cwd`. **Fix:** make project resolution
+> explicit instead of implicit — pass `uv run --project ${AYON_WORKSPACE_ROOT:...} ayon-sdd
+> ...` so `uv` never has to discover the project directory on its own. This removes the
+> only remaining variable between the working and failing task. Verified after the fix:
+> `uv run --project <ROOT> ayon-sdd worktree-setup --dry-run` succeeds from an unrelated
+> `cwd` (`/tmp`) and from inside the affected worktree itself.
 ayon-sdd install-global                    # writes the whole L0 layer (Phase A)
 ayon-sdd bootstrap [--root PATH]           # Phase G: whole workspace from scratch
 ayon-sdd doctor                            # asserts every §2 invariant on this machine
