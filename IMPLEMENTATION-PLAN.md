@@ -769,6 +769,53 @@ source. `chunkhound` with `nomic-embed-text` via Ollama is the lowest-maintenanc
 `~/.config/goose/config.yaml` and, for Zed, in `.zed/settings.json` → `context_servers`
 (project-scopable — Z11). **Do not** put it in `agent_servers` (Z10).
 
+### Phase F execution notes
+
+**F1 — done.** `ayon-batch-delivery/.github/workflows/copilot-setup-steps.yml` installs
+`uv` and runs `uv sync --extra dev`, giving the Copilot cloud agent `ruff`/`pytest` on
+`PATH` deterministically instead of trial-and-error discovery. `AGENTS.md` was already
+self-sufficient (C1), so no changes were needed there. Verified locally: `uv sync --extra
+dev` followed by `uv run ruff --version` / `uv run pytest --version` both succeed in a
+scratch copy of the repo.
+
+**F2 — done, with two adaptations the plan text didn't anticipate, both recorded in
+`ayon-agentic-instructions/recipes/README.md` ("Running in CI"):**
+1. `ayon-package-check`'s `settings.goose_provider: ollama` / `goose_model: ornith:9b`
+   (E3) assumes a local Ollama daemon, absent on GitHub-hosted runners. CI overrides it
+   with `goose run --provider openai --model gpt-4o-mini`, verified (via goose's own
+   documented precedence: CLI flags > env vars > recipe `settings:` > config file) to
+   win over the recipe's own setting without editing the recipe.
+2. `response.json_schema` is broken in this goose version (E, known limitation #1), so
+   `.github/scripts/parse_goose_package_check.py` extracts the recipe's fenced
+   `` ```json `` verdict from the `--output-format json` transcript instead. Both the
+   pass and fail paths, and a malformed-transcript path, were exercised locally against
+   synthetic transcripts before being committed.
+3. `.agents-main` is a local-only, uncommitted L2 symlink (§3) invisible to a fresh CI
+   checkout. The workflow checks out the private `ynput/ayon-agentic-instructions` repo
+   a second time and recreates the symlink at runtime so the recipe's constitution
+   reference resolves; this needs a repo secret (`AYON_AGENTIC_INSTRUCTIONS_TOKEN`) that
+   is not yet created — the workflow fails fast with a clear `::error::` if it or
+   `OPENAI_API_KEY` are missing, rather than failing deep inside goose.
+
+The install-CLI step itself follows the official pattern verified against
+`aaif-goose/goose`'s `documentation/docs/tutorials/cicd.md` at HEAD (not a third-party
+action, per N13): `GOOSE_VERSION`/`CONFIGURE`/`GOOSE_BIN_DIR` env vars into
+`download_cli.sh`, confirmed against that script's own source. `GOOSE_VERSION: "1.47.0"`
+pins to the version verified in §2.2; the corresponding GitHub release tag was confirmed
+to exist.
+
+Committed to `ayon-batch-delivery` (`707b608`) and `ayon-agentic-instructions`
+(`b3c1da5`), both on `agentic-sdd-dev` (§6 D1). Not yet exercised by an actual GitHub
+Actions run — that requires the two secrets above to be created by a human with repo
+admin access, which is out of scope for this phase.
+
+**F3 — skipped, by design.** No in-scope repo (§6 D1) has any `specs/NNN-slug/` content
+yet (`/speckit.specify` has not been run anywhere), and the entire SDD prose corpus
+(`ayon-agentic-instructions/memory/` + `.agents/checks/`) is ~400 lines total. There is no
+retrieval gap grep/ripgrep don't already cover — exactly the outcome §2.6's own
+recommendation anticipated. Building `chunkhound` now would be infrastructure with
+nothing real to index; revisit once feature specs actually accumulate.
+
 ---
 
 ### Phase G — Reproducibility: scripting the whole setup and bootstrapping a new workspace root
