@@ -40,7 +40,7 @@ package_workspace_dir = scripts_dir.parent.parent
 
 # Shared skills currently under <ROOT>/.agents/skills that must become
 # globally visible (goose's per-repo skill visibility limitation, N1).
-SHARED_SKILLS = ["harsh-code-review", "yn-pr-description", "yn-pr-update"]
+SHARED_SKILLS = ["yn-pr-description", "yn-pr-update"]
 
 WORKSPACE_ROOT_TOKEN = "__AYON_WORKSPACE_ROOT__"
 
