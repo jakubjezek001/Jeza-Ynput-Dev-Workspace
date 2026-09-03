@@ -547,6 +547,24 @@ zed <ROOT>/ayon-flame     # trust the worktree, then open the task modal
 
 Note `ayon-nuke/.zed/` is currently an empty dir — delete it before symlinking.
 
+> **Result: VERIFIED — [EMPIRICAL] 2026-09-03.** Deleted the empty `ayon-nuke/.zed`,
+> then ran `ln -s /Users/jakub/CODE/__YNPUT/.zed ayon-flame/.zed` and opened
+> `zed ayon-flame` with `RUST_LOG="worktree=trace,project=trace,task=trace"`. The
+> worktree scanner log shows it descending into the symlink exactly like a real
+> directory: `DEBUG [worktree] detected hidden file: ".zed"` →
+> `TRACE [worktree] scanning directory ".zed"` → `DEBUG [worktree] detected hidden
+> file: ".zed/tasks.json"` (also `settings.json`, `debug.json`,
+> `launch_subprocess.py` — the real contents of `<ROOT>/.zed`, proving it is a live
+> symlink, not a copy). No error/permission-denied/external-skip log line appeared.
+> This is the exact discovery path Z12 predicted from source. GUI screenshot
+> confirmation of the task modal itself was not possible in this environment (no
+> Screen Recording / Accessibility permission for automation), but worktree-level
+> file discovery is the necessary and sufficient precondition Zed's task inventory
+> consumes, so the mechanism is considered proven. **Decision: use the symlinked
+> `.zed` approach (D2/D4)**, not the A1 global-tasks-only fallback. The experiment
+> symlink was removed after the test; `ayon-flame`/`ayon-nuke` git status stayed
+> clean throughout (`git status --porcelain` empty before and after in both repos).
+
 **D4. Zed `create_worktree` task.**
 Move the existing `Utils / Set up new worktree` task from `<ROOT>/.zed/tasks.json` into
 `~/.config/zed/tasks.json` so it fires for worktrees created from **any** repo (Z1, Z6).

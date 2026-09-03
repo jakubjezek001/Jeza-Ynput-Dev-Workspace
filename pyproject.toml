@@ -60,6 +60,10 @@ launcher-dev-mode = "jeza_ynput_dev_workspace:launcher_dev_mode"
 ayon-launch-app = "jeza_ynput_dev_workspace:launch_ayon_app"
 ayon-sdd = "jeza_ynput_dev_workspace:ayon_sdd"
 ayon-sdd-install-global = "jeza_ynput_dev_workspace:install_global"
+ayon-sdd-link = "jeza_ynput_dev_workspace:link"
+ayon-sdd-unlink = "jeza_ynput_dev_workspace:unlink"
+ayon-sdd-status = "jeza_ynput_dev_workspace:status"
+ayon-sdd-worktree-setup = "jeza_ynput_dev_workspace:worktree_setup"
 
 [build-system]
 requires = ["hatchling"]

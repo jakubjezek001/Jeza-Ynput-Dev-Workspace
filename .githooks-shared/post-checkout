@@ -1,0 +1,55 @@
+#!/bin/bash
+# Shared post-checkout hook — IMPLEMENTATION-PLAN.md D1.
+#
+# One file for every in-scope repo, referenced via an ABSOLUTE
+# `core.hooksPath` (G2) so nothing needs to be committed to any repo and
+# every linked worktree inherits it automatically. Wired per-repo by
+# `uv run ayon-sdd link` (D2); this file itself is never modified per-repo.
+#
+# This hook does exactly one thing: detect that a brand-new linked worktree
+# was just created (G1), then shell out to `ayon-sdd worktree-setup` — the
+# single implementation shared with the Zed `create_worktree` task (D4). Do
+# not add any setup logic here; add it to `worktree_setup.py` instead.
+
+# 0. Self-correct the executable bit. Git silently skips a hook that isn't
+# executable, and this file is shared (not per-repo), so it's worth
+# defending against a stray chmod once rather than per-repo.
+if [ ! -x "$0" ]; then
+    chmod +x "$0" 2>/dev/null
+fi
+
+# 1. Capture the git hook arguments.
+PREV_HEAD="$1"
+IS_BRANCH_CHECKOUT="$3"
+
+# 2. Only act on "a brand new linked worktree was just created" (G1):
+# previous HEAD is all zeros, this is a branch checkout, and the current
+# git-dir differs from the common git-dir (the reliable "linked worktree,
+# not the main one" test).
+GIT_DIR="$(git rev-parse --git-dir 2>/dev/null)"
+GIT_COMMON_DIR="$(git rev-parse --git-common-dir 2>/dev/null)"
+
+if [ "$PREV_HEAD" = "0000000000000000000000000000000000000000" ] \
+   && [ "$IS_BRANCH_CHECKOUT" = "1" ] \
+   && [ -n "$GIT_DIR" ] \
+   && [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+
+    # The hook runs with cwd = the new worktree's root.
+    WORKTREE="$(pwd)"
+
+    # The repo's main worktree is the common git-dir's parent (works for
+    # both a plain repo and an already-linked worktree calling back in).
+    MAIN="$(cd "$(git rev-parse --path-format=absolute --git-common-dir)/.." && pwd)"
+
+    # Resolve <ROOT> from this script's own location, never a literal path:
+    # this file lives at <ROOT>/.githooks-shared/post-checkout.
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+    ROOT="$(dirname "$SCRIPT_DIR")"
+
+    echo "⚙️  New linked worktree detected at: $WORKTREE"
+    (cd "$ROOT" && AYON_WORKSPACE_ROOT="$ROOT" uv run ayon-sdd worktree-setup \
+        --worktree "$WORKTREE" --main "$MAIN")
+fi
+
+# Never fail the checkout, regardless of what happened above.
+exit 0

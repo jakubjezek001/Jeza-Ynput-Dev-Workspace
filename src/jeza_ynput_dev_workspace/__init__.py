@@ -8,6 +8,9 @@ from .create_addon_package import create_addon_package
 from .launcher_dev_mode import launcher_dev_mode
 from .launch_ayon_app import launch_ayon_app
 from .sdd_install_global import install_global
+from .sdd_link import link, unlink
+from .sdd_status import status
+from .sdd_worktree_setup import worktree_setup
 from .ayon_sdd import ayon_sdd
 
 __all__ = [
@@ -21,5 +24,9 @@ __all__ = [
     "launcher_dev_mode",
     "launch_ayon_app",
     "install_global",
+    "link",
+    "unlink",
+    "status",
+    "worktree_setup",
     "ayon_sdd",
 ]
