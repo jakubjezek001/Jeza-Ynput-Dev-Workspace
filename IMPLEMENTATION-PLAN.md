@@ -675,6 +675,24 @@ Falls back to the old first-path-segment heuristic only for files outside any gi
 Verified against all three path shapes; `git status --porcelain` stayed clean in every
 repo throughout.
 
+**U3. U2's fix resolved the addon *name* correctly but still packaged/uploaded from the
+wrong *directory*.** Follow-up bug found by the user after U2 landed: running the task
+from a file inside a worktree (e.g.
+`<ROOT>/worktrees/ayon-resolve/prime-north/ayon-resolve/create_package.py`) completed
+"successfully", but silently generated and uploaded the package from
+`<ROOT>/ayon-resolve` (the main checkout) instead of the worktree the file actually lives
+in — because the code still built `addon_repo_dir` as `workspace_dir / addon_name`
+unconditionally, ignoring where the file was actually found. `_resolve_addon_name()`
+only ever answered "which addon", never "which checkout of it". **Fix:** replaced it with
+`_resolve_addon()`, returning `(addon_name, addon_repo_dir)`. `addon_repo_dir` comes from
+`git -C <dir> rev-parse --show-toplevel` run from the file's own directory — the
+checkout root that actually contains the file, i.e. the worktree root when the file is
+inside one, or the main checkout root otherwise. `create_package.py` is now invoked from
+that resolved directory, not always from `<ROOT>/<addon>`. Both scenarios verified
+explicitly: (1) file inside a `git worktree add` worktree resolves to the worktree's own
+directory; (2) file inside the main checkout resolves to `<ROOT>/<addon>` as before.
+`git status --porcelain` stayed clean in every repo throughout.
+
 ---
 
 ### Phase E — SDD workflow and local-inference recipes

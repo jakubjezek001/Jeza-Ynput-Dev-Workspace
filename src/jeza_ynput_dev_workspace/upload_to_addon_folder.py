@@ -43,46 +43,60 @@ docker_addons_dir = workspace_dir / "ayon-docker" / "addons"
 python_exe = sys.executable
 
 
-def _resolve_addon_name(file_path: Path, workspace_dir: Path) -> str | None:
-    """Resolve the addon (repo) folder name that a file path belongs to.
+def _resolve_addon(
+    file_path: Path, workspace_dir: Path
+) -> tuple[str, Path] | None:
+    """Resolve the addon name and its actual checkout directory for a file.
 
-    Asks git for the repository's true identity first, via the file's
-    containing directory. This is robust to worktrees, whose working-copy
-    path does not match the addon name -- e.g. Zed's own worktree picker
-    nests checkouts under an extra ``worktrees/<addon>/<random-name>/<addon>``
-    layer, and `git worktree add` names the checkout after the branch, not
-    the addon. Both cases share one `.git` "common dir" with the main
-    checkout, whose parent folder name is the actual addon name.
+    Returns both the addon's name (e.g. ``"ayon-resolve"``) and the directory
+    that actually contains the addon's working copy for this file. Those are
+    *not* always the same as ``<workspace_dir>/<addon-name>``: a file may live
+    inside a worktree, either one created via `git worktree add`
+    (`<ROOT>/<addon>.worktrees/<branch>/...`) or via Zed's own picker
+    (`<ROOT>/worktrees/<addon>/<random-name>/<addon>/...`). Package generation
+    must run from *that* checkout, or it silently packages and uploads the
+    main checkout's code instead of the one the file actually belongs to.
 
-    Falls back to the first path segment relative to the workspace root for
-    files that are not inside a git repository at all.
+    Uses git itself to answer both questions from the file's containing
+    directory:
+      - ``--git-common-dir``'s parent folder name is the addon name (stable
+        across every checkout of the same repo, main or worktree).
+      - ``--show-toplevel`` is the checkout root that actually contains the
+        file (the worktree root, if the file is inside one; the main
+        checkout root otherwise).
+
+    Falls back to the first path segment relative to the workspace root, and
+    ``workspace_dir / addon_name`` as the directory, for files that are not
+    inside a git repository at all.
 
     Returns:
-        str | None: the addon folder name (e.g. ``"ayon-flame"``), or
-        ``None`` if it could not be determined.
+        tuple[str, Path] | None: ``(addon_name, addon_repo_dir)``, or
+        ``None`` if the addon could not be determined.
     """
     search_dir = file_path if file_path.is_dir() else file_path.parent
-    try:
-        common_dir = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(search_dir),
-                "rev-parse",
-                "--path-format=absolute",
-                "--git-common-dir",
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-        ).stdout.strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        common_dir = None
 
+    def _git(*args: str) -> str | None:
+        try:
+            return subprocess.run(
+                ["git", "-C", str(search_dir), *args],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return None
+
+    common_dir = _git(
+        "rev-parse", "--path-format=absolute", "--git-common-dir"
+    )
     if common_dir:
         addon_name = Path(common_dir).parent.name
         if addon_name.startswith("ayon-"):
-            return addon_name
+            toplevel = _git("rev-parse", "--show-toplevel")
+            addon_dir = (
+                Path(toplevel) if toplevel else workspace_dir / addon_name
+            )
+            return addon_name, addon_dir
 
     if file_path.is_absolute():
         try:
@@ -92,7 +106,9 @@ def _resolve_addon_name(file_path: Path, workspace_dir: Path) -> str | None:
     if not file_path.parts:
         return None
     first_folder = file_path.parts[0]
-    return first_folder if first_folder.startswith("ayon-") else None
+    if first_folder.startswith("ayon-"):
+        return first_folder, workspace_dir / first_folder
+    return None
 
 
 @click.command()
@@ -130,19 +146,18 @@ def upload_to_addon_folder(debug, file_path):
 
     repo_folders = os.listdir(workspace_dir.as_posix())
 
-    addon_name = _resolve_addon_name(Path(file_path), workspace_dir)
-    if addon_name is None:
+    addon_resolved = _resolve_addon(Path(file_path), workspace_dir)
+    if addon_resolved is None:
         log.error(f"No valid addon path found for {file_path}")
         sys.exit(1)
-    addons = [addon_name]
+    addons = [addon_resolved]
 
     processed_addons = []
-    for addon in addons:
+    for addon, addon_repo_dir in addons:
         if addon not in repo_folders:
             log.warning(f"Addon {addon} not found in workspace")
             continue
 
-        addon_repo_dir = workspace_dir / addon
         create_package_script = addon_repo_dir / "create_package.py"
 
         if not create_package_script.exists():
