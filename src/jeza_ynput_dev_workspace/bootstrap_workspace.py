@@ -42,6 +42,7 @@ from .git_clone_all_repos import ALL_REPOS, clone_repos
 from .sdd_common import (
     BRANCH_TABLE,
     CENTRAL_REPO,
+    CENTRAL_REPO_BRANCH,
     DEFAULT_CLONE_REPOS,
     SCOPE_REPOS,
     ensure_branch,
@@ -181,9 +182,7 @@ def bootstrap(
         log.info("--skip-clone set, not cloning anything")
     else:
         target_list = ALL_REPOS if use_all else DEFAULT_CLONE_REPOS
-        newly_cloned = clone_repos(
-            root, target_list, branches=BRANCH_TABLE, dry_run=dry_run
-        )
+        newly_cloned = clone_repos(root, target_list, dry_run=dry_run)
         for name in newly_cloned:
             branch = BRANCH_TABLE.get(name)
             if branch:
@@ -194,7 +193,11 @@ def bootstrap(
 
     log.info("=== 5. Clone/locate the L1 central repo ===")
     if not (root / CENTRAL_REPO).is_dir():
-        clone_repos(root, [CENTRAL_REPO], dry_run=dry_run)
+        central_cloned = clone_repos(root, [CENTRAL_REPO], dry_run=dry_run)
+        if central_cloned:
+            ensure_branch(
+                root / CENTRAL_REPO, CENTRAL_REPO_BRANCH, dry_run, log
+            )
     else:
         log.info(f"{CENTRAL_REPO}: already present")
 

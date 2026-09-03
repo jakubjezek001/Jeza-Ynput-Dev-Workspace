@@ -1,7 +1,7 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import List, Union
 
 # List of repositories to clone, organized by category. Moved to a module
 # constant (Phase G, G2) so ``--all`` (the full ~40-repo set, §6 D6) and the
@@ -67,7 +67,6 @@ ALL_REPOS: List[str] = [
 def clone_repos(
     target_dir: Union[str, Path],
     repos: List[str],
-    branches: Optional[Dict[str, str]] = None,
     dry_run: bool = False,
 ) -> List[str]:
     """Clone ``repos`` into ``target_dir`` without changing directory.
@@ -77,14 +76,18 @@ def clone_repos(
     ``ayon-sdd bootstrap`` (Phase G, G2), which needs an explicit repo list
     and target path and must never call ``os.chdir`` globally.
 
+    Always clones the default branch — a §6 D1 repo's target branch does
+    not necessarily exist on ``origin`` yet (verified true for 5 of the 7
+    repos, 2026-09-03), so ``git clone -b <branch>`` would fail outright.
+    ``ayon-sdd bootstrap`` instead calls ``sdd_common.ensure_branch`` after
+    cloning, which correctly handles both cases (track the branch if it
+    exists on ``origin``, otherwise create it fresh).
+
     Args:
         target_dir (Union[str, Path]): directory repos are cloned into;
             created if missing.
         repos (List[str]): repo names (under ``github.com/ynput/``) to
             clone.
-        branches (Optional[Dict[str, str]]): optional ``repo -> branch``
-            map; if a repo name is present, ``git clone -b <branch>`` is
-            used instead of the default branch.
         dry_run (bool): if set, only print the plan, clone nothing.
 
     Returns:
@@ -99,29 +102,26 @@ def clone_repos(
     target = Path(target_dir)
     if not dry_run:
         target.mkdir(parents=True, exist_ok=True)
-    branches = branches or {}
 
     newly_cloned: List[str] = []
     for repo in repos:
         repo_path = target / repo
         if repo_path.exists():
-            print(f"'{repo}' exists")
+            print(f"'{repo}' exists", flush=True)
             continue
 
-        branch = branches.get(repo)
         if dry_run:
-            suffix = f" (branch {branch})" if branch else ""
-            print(f"[dry-run] would clone '{repo}'{suffix} into {target}")
+            print(
+                f"[dry-run] would clone '{repo}' into {target}",
+                flush=True,
+            )
             newly_cloned.append(repo)
             continue
 
-        command = ["git", "clone"]
-        if branch:
-            command += ["-b", branch]
-        command += [f"https://github.com/ynput/{repo}.git"]
+        command = ["git", "clone", f"https://github.com/ynput/{repo}.git"]
         result = subprocess.run(command, cwd=str(target))
         if result.returncode == 0:
-            print(f"'{repo}' cloned successfully")
+            print(f"'{repo}' cloned successfully", flush=True)
             newly_cloned.append(repo)
         else:
             raise FileNotFoundError(f"Error cloning '{repo}' repository")

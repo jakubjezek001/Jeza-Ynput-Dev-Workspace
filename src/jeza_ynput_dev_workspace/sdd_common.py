@@ -33,6 +33,11 @@ FORBIDDEN_REPOS = ["ayon-backend", "ayon-frontend", "ayon-docker"]
 # The central repo linked *into* every scope repo; it is never linked itself.
 CENTRAL_REPO = "ayon-agentic-instructions"
 
+# The branch of CENTRAL_REPO holding the real content (memory/, fragments/,
+# recipes/ — including the AYON constitution); the repo's default branch
+# (``main``) predates all of this and must never be used by a fresh clone.
+CENTRAL_REPO_BRANCH = "agentic-sdd-dev"
+
 # The per-repo branch to commit SDD artifacts on (IMPLEMENTATION-PLAN.md §6
 # D1 — binding, do not re-derive). Every writing subcommand (init-speckit,
 # doctor) reads this one table instead of hardcoding branch names.

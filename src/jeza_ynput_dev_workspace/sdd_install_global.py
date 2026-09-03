@@ -186,6 +186,7 @@ def _install_shared_skills(
             continue
 
         global_skills_dir.mkdir(parents=True, exist_ok=True)
+        local_skills_dir.mkdir(parents=True, exist_ok=True)
 
         if local_path.is_dir() and not local_path.is_symlink():
             if global_path.exists():
