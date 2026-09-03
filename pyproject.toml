@@ -64,6 +64,9 @@ ayon-sdd-link = "jeza_ynput_dev_workspace:link"
 ayon-sdd-unlink = "jeza_ynput_dev_workspace:unlink"
 ayon-sdd-status = "jeza_ynput_dev_workspace:status"
 ayon-sdd-worktree-setup = "jeza_ynput_dev_workspace:worktree_setup"
+ayon-sdd-init-speckit = "jeza_ynput_dev_workspace:init_speckit"
+ayon-sdd-doctor = "jeza_ynput_dev_workspace:doctor"
+ayon-workspace-bootstrap = "jeza_ynput_dev_workspace:bootstrap"
 
 [build-system]
 requires = ["hatchling"]

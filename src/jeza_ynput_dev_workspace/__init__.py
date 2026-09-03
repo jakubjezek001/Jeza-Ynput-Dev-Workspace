@@ -11,6 +11,9 @@ from .sdd_install_global import install_global
 from .sdd_link import link, unlink
 from .sdd_status import status
 from .sdd_worktree_setup import worktree_setup
+from .sdd_init_speckit import init_speckit
+from .sdd_doctor import doctor
+from .bootstrap_workspace import bootstrap
 from .ayon_sdd import ayon_sdd
 
 __all__ = [
@@ -28,5 +31,8 @@ __all__ = [
     "unlink",
     "status",
     "worktree_setup",
+    "init_speckit",
+    "doctor",
+    "bootstrap",
     "ayon_sdd",
 ]

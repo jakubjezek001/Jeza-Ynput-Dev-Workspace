@@ -33,6 +33,27 @@ FORBIDDEN_REPOS = ["ayon-backend", "ayon-frontend", "ayon-docker"]
 # The central repo linked *into* every scope repo; it is never linked itself.
 CENTRAL_REPO = "ayon-agentic-instructions"
 
+# The per-repo branch to commit SDD artifacts on (IMPLEMENTATION-PLAN.md §6
+# D1 — binding, do not re-derive). Every writing subcommand (init-speckit,
+# doctor) reads this one table instead of hardcoding branch names.
+BRANCH_TABLE = {
+    "ayon-batch-delivery": "agentic-sdd-dev",
+    "ayon-flame": "agentic-sdd-dev",
+    "ayon-resolve": "agentic-sdd-dev",
+    "ayon-hiero": "agentic-sdd-dev",
+    "ayon-core": "agentic-sdd-dev",
+    "ayon-launcher": "agentic-sdd-dev",
+    "ayon-nuke": "enhancement/developing-agentic-workflow-basic",
+}
+
+# G2/D6: the "in-scope ten" `ayon-sdd bootstrap` clones by default — the
+# seven §6 D1 repos plus the three permanently out-of-scope repos (needed
+# on disk as read-only local infra, e.g. to run the AYON stack, but never
+# linked or written to — see FORBIDDEN_REPOS and every subcommand's
+# ``assert_in_scope``). ``--all`` instead reuses the full
+# ``git_clone_all_repos`` list (§6 D6).
+DEFAULT_CLONE_REPOS = SCOPE_REPOS + FORBIDDEN_REPOS
+
 
 def resolve_workspace_root() -> Path:
     """Resolve ``<ROOT>``, preferring an explicit override.
@@ -102,6 +123,109 @@ def resolve_target_repos(
     for target in targets:
         assert_in_scope(target)
     return targets
+
+
+def current_branch(repo: Path) -> str:
+    """Return the branch currently checked out in ``repo``.
+
+    Args:
+        repo (Path): repository to query.
+
+    Returns:
+        str: the branch name, or "" if detached/unresolvable.
+    """
+    result = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "--abbrev-ref", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout.strip()
+
+
+def assert_branch(repo: Path) -> None:
+    """Assert ``repo`` is checked out on its §6 D1 branch.
+
+    This is the one hard safety rail the whole plan depends on: **never**
+    write SDD artifacts to the wrong branch. Repos absent from
+    ``BRANCH_TABLE`` are not part of §6 D1 and are silently allowed through.
+
+    Args:
+        repo (Path): repository to check.
+
+    Raises:
+        click.ClickException: if ``repo.name`` is in ``BRANCH_TABLE`` and the
+            checked-out branch does not match — "stop and report", never
+            switch branches automatically (§6 D1).
+    """
+    expected = BRANCH_TABLE.get(repo.name)
+    if expected is None:
+        return
+    actual = current_branch(repo)
+    if actual != expected:
+        message = (
+            f"{repo.name} is on branch '{actual}', expected '{expected}' "
+            f"(IMPLEMENTATION-PLAN.md \u00a76 D1). Stopping — never "
+            f"switching branches automatically."
+        )
+        raise click.ClickException(message)
+
+
+def ensure_branch(
+    repo: Path,
+    branch: str,
+    dry_run: bool,
+    log,
+) -> None:
+    """Idempotently put a **freshly cloned** ``repo`` onto ``branch``.
+
+    Only ever called by the bootstrap clone step (G2/G3), immediately after
+    cloning a repo that did not previously exist on disk — never against a
+    repo that might already carry local work, which is exactly the case
+    ``assert_branch``/§6 D1 protects instead. If ``branch`` already exists on
+    ``origin`` (true for ``ayon-batch-delivery`` and ``ayon-nuke``, verified
+    2026-09-02), track it; otherwise create it fresh from whatever branch the
+    clone checked out by default, so a brand-new workspace ends up with
+    somewhere valid to commit the §6 D1 artifacts, exactly like the
+    already-branched repos on this machine.
+
+    Args:
+        repo (Path): repository to check out, just cloned.
+        branch (str): target branch name (from ``BRANCH_TABLE``).
+        dry_run (bool): if set, only log the planned change.
+        log: logger to report progress on.
+    """
+    actual = current_branch(repo)
+    if actual == branch:
+        log.info(f"{repo.name}: already on {branch}")
+        return
+    if dry_run:
+        log.info(f"[dry-run] {repo.name}: would check out branch {branch}")
+        return
+
+    remote = subprocess.run(
+        ["git", "-C", str(repo), "ls-remote", "--heads", "origin", branch],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if remote.stdout.strip():
+        subprocess.run(
+            [
+                "git", "-C", str(repo), "checkout", "-b", branch,
+                f"origin/{branch}",
+            ],
+            check=True,
+        )
+        log.info(f"{repo.name}: checked out existing origin/{branch}")
+    else:
+        subprocess.run(
+            ["git", "-C", str(repo), "checkout", "-b", branch],
+            check=True,
+        )
+        log.info(
+            f"{repo.name}: created new local branch {branch} (\u00a76 D1)"
+        )
 
 
 def is_tracked(repo: Path, relative_path: str) -> bool:

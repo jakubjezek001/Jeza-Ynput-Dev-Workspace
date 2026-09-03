@@ -192,5 +192,33 @@
     "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
     "hooks": ["create_worktree"],
     "hide": "on_success"
+  },
+  {
+    "label": "AYON / Bootstrap agentic workspace HERE",
+    "command": "uv",
+    "args": [
+      "run",
+      "--project", "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+      "ayon-sdd",
+      "bootstrap",
+      "--root", "$ZED_WORKTREE_ROOT"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "use_new_terminal": true,
+    "reveal": "always",
+    "hide": "never"
+  },
+  {
+    "label": "AYON / Doctor",
+    "command": "uv",
+    "args": [
+      "run",
+      "--project", "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+      "ayon-sdd",
+      "doctor"
+    ],
+    "cwd": "${AYON_WORKSPACE_ROOT:__AYON_WORKSPACE_ROOT__}",
+    "reveal": "always",
+    "hide": "on_success"
   }
 ]
