@@ -20,6 +20,8 @@ Notes:
 
 """
 
+from __future__ import annotations
+
 import logging
 import os
 import subprocess
@@ -39,6 +41,58 @@ workspace_dir = Path(__file__).resolve().parent.parent.parent
 docker_addons_dir = workspace_dir / "ayon-docker" / "addons"
 
 python_exe = sys.executable
+
+
+def _resolve_addon_name(file_path: Path, workspace_dir: Path) -> str | None:
+    """Resolve the addon (repo) folder name that a file path belongs to.
+
+    Asks git for the repository's true identity first, via the file's
+    containing directory. This is robust to worktrees, whose working-copy
+    path does not match the addon name -- e.g. Zed's own worktree picker
+    nests checkouts under an extra ``worktrees/<addon>/<random-name>/<addon>``
+    layer, and `git worktree add` names the checkout after the branch, not
+    the addon. Both cases share one `.git` "common dir" with the main
+    checkout, whose parent folder name is the actual addon name.
+
+    Falls back to the first path segment relative to the workspace root for
+    files that are not inside a git repository at all.
+
+    Returns:
+        str | None: the addon folder name (e.g. ``"ayon-flame"``), or
+        ``None`` if it could not be determined.
+    """
+    search_dir = file_path if file_path.is_dir() else file_path.parent
+    try:
+        common_dir = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(search_dir),
+                "rev-parse",
+                "--path-format=absolute",
+                "--git-common-dir",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        common_dir = None
+
+    if common_dir:
+        addon_name = Path(common_dir).parent.name
+        if addon_name.startswith("ayon-"):
+            return addon_name
+
+    if file_path.is_absolute():
+        try:
+            file_path = file_path.relative_to(workspace_dir)
+        except ValueError:
+            return None
+    if not file_path.parts:
+        return None
+    first_folder = file_path.parts[0]
+    return first_folder if first_folder.startswith("ayon-") else None
 
 
 @click.command()
@@ -62,7 +116,9 @@ def upload_to_addon_folder(debug, file_path):
     required_env_vars = ["AYON_SERVER_URL", "AYON_API_KEY"]
     missing_vars = [var for var in required_env_vars if not os.getenv(var)]
     if missing_vars:
-        log.error(f"Missing required environment variables: {', '.join(missing_vars)}")
+        log.error(
+            f"Missing required environment variables: {', '.join(missing_vars)}"
+        )
         log.error("Please ensure these are set in your .env file")
         sys.exit(1)
 
@@ -74,24 +130,11 @@ def upload_to_addon_folder(debug, file_path):
 
     repo_folders = os.listdir(workspace_dir.as_posix())
 
-    # get first folder from file path and check if ayon-* is in name
-    addons = []
-    file_path = Path(file_path)
-    # normalize an absolute path (e.g. Zed's $ZED_FILE) to be relative to the
-    # workspace root, so the addon-folder lookup below works either way
-    if file_path.is_absolute():
-        try:
-            file_path = file_path.relative_to(workspace_dir)
-        except ValueError:
-            log.error(f"File path {file_path} is not inside workspace {workspace_dir}")
-            sys.exit(1)
-    # split path to get first folder
-    first_folder = file_path.parts[0]
-    if first_folder.startswith("ayon-"):
-        addons.append(first_folder)
-    else:
-        log.error("No valid addon path found")
+    addon_name = _resolve_addon_name(Path(file_path), workspace_dir)
+    if addon_name is None:
+        log.error(f"No valid addon path found for {file_path}")
         sys.exit(1)
+    addons = [addon_name]
 
     processed_addons = []
     for addon in addons:
@@ -112,13 +155,15 @@ def upload_to_addon_folder(debug, file_path):
             str(create_package_script),
             "--skip-zip",
             "--output",
-            str(docker_addons_dir)
+            str(docker_addons_dir),
         ]
 
         log.info(f"Running: {' '.join(cmd)}")
 
         try:
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            result = subprocess.run(
+                cmd, check=True, capture_output=True, text=True
+            )
             log.info(f"Package created successfully for {addon}")
             if debug:
                 log.debug(f"Output: {result.stdout}")
@@ -139,7 +184,9 @@ def upload_to_addon_folder(debug, file_path):
         log.info("AYON API initialized successfully")
     except Exception as e:
         log.error(f"Failed to initialize AYON API: {e}")
-        log.error("Please check your AYON_SERVER_URL and AYON_API_KEY in .env file")
+        log.error(
+            "Please check your AYON_SERVER_URL and AYON_API_KEY in .env file"
+        )
         sys.exit(1)
 
     log.info("Trying to restart server")

@@ -642,6 +642,41 @@ detected rather than discovered.
 
 ---
 
+### Unplanned fixes applied during Phase D (out of the original D1–D5 scope)
+
+These two items surfaced from the user's own real-world testing of the Phase D
+deliverable (creating a worktree via Zed's picker, then running its tasks) and were
+fixed on explicit request. Neither was in the original D1–D5 task list; both are
+recorded here so the plan stays the single source of truth for what changed and why.
+
+**U1. `Utils / Set up new worktree` failed to spawn `ayon-sdd` via `uv run`.**
+See the "D4 real-world GUI verification" note above (§4, under D5's command table) for
+the full root-cause writeup. One-line summary: `uv run ayon-sdd ...` relies on `uv`
+discovering the project by walking up from `cwd`; this is implicit and, specifically for
+`create_worktree`-hook-triggered tasks (a different execution path than a manually
+invoked task), was unreliable. Fixed by passing `--project ${AYON_WORKSPACE_ROOT:...}`
+explicitly in `templates/zed_tasks.json.tmpl`, removing the ambiguity entirely.
+Re-rendered via `ayon-sdd install-global`. Committed `00f73a0`.
+
+**U2. `Dev / Upload addon to server and restart` failed with "No valid addon path found".**
+Pre-existing bug in `upload_to_addon_folder.py` (not authored as part of this plan, and
+not previously covered by it), triggered by any file living under the
+`<ROOT>/worktrees/<addon>/<random-name>/<addon>/...` layout that Zed's own worktree
+picker has used for months (independent of Phase D) or under `<ROOT>/<addon>.worktrees/
+<branch>/...` created via `git worktree add`. The script derived the addon name from the
+first path segment relative to `<ROOT>`, which is wrong whenever the working copy is a
+worktree — the first segment is `worktrees` or the branch name, never the addon.
+**Fix:** added `_resolve_addon_name()`, which asks git itself for the file's repository
+identity (`git -C <dir> rev-parse --path-format=absolute --git-common-dir`, then takes
+the parent folder name of that common dir). This is correct for a direct checkout, a
+`git worktree add` worktree, and a Zed-picker worktree alike, because all three share one
+`.git` common dir with the main checkout regardless of the worktree's own directory name.
+Falls back to the old first-path-segment heuristic only for files outside any git repo.
+Verified against all three path shapes; `git status --porcelain` stayed clean in every
+repo throughout.
+
+---
+
 ### Phase E — SDD workflow and local-inference recipes
 
 **E1. Map SDD to the tools we now have** (do not invent a parallel workflow):
