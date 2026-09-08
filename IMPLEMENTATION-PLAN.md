@@ -25,8 +25,14 @@ old global-task implementation has been removed.
    migrated automatically by `ayon-sdd link` and `ayon-sdd worktree-setup`.
 
 3. **Explicit `uv --project`**: every workspace-owned command runs
-   `uv run --project ${AYON_WORKSPACE_ROOT:<ROOT>} <script>` so `uv` never
-   selects an addon's `pyproject.toml`.
+   `uv run --project <ROOT> <script>` so `uv` never selects an addon's
+   `pyproject.toml`. The `args` carry the literal root path: Zed expands
+   `${VAR:default}` in `cwd` but not in `args`, and zsh would otherwise
+   expand the unset `AYON_WORKSPACE_ROOT` to an empty string, making `uv`
+   swallow the script name as the project and fail on the script's own
+   flags (e.g. `-f` collides with `uv run --find-links`, `--debug` is
+   unexpected). `cwd` keeps the `${AYON_WORKSPACE_ROOT:<ROOT>}` form, which
+   Zed expands and which stays overridable via the environment variable.
 
 4. **Selected-file resolution**: file-based tasks pass `$ZED_FILE`
    (absolute). `repo_context.resolve_checkout()` uses

@@ -50,7 +50,8 @@ def _relink_absolute(
     ``ayon-nuke/.zed`` case ported to the worktree context); refuses to
     touch a non-empty real directory or file, to avoid silent data loss —
     this subcommand only ever runs against brand-new worktrees, so it never
-    needs a ``--force`` escape hatch.
+    needs a ``--force`` escape hatch. Missing parent directories (e.g. a
+    brand-new worktree that has no ``.zed/`` at all) are created as needed.
 
     Args:
         link_path (Path): path (inside the new worktree) to symlink.
@@ -81,6 +82,7 @@ def _relink_absolute(
     if dry_run:
         log.info(f"[dry-run] would symlink {link_path} -> {target}")
         return
+    link_path.parent.mkdir(parents=True, exist_ok=True)
     link_path.symlink_to(target)
     log.info(f"Symlinked {link_path} -> {target}")
 

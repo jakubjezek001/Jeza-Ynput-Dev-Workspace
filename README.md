@@ -61,7 +61,7 @@ explicitly:
 "command": "uv",
 "args": [
   "run",
-  "--project", "${AYON_WORKSPACE_ROOT:[abs path to this repository root folder]}",
+  "--project", "[abs path to this repository root folder]",
   "create-addon-package",
   "-f", "$ZED_FILE",
   "--debug"
@@ -71,7 +71,18 @@ explicitly:
 
 This prevents `uv` from picking up `ayon-core/pyproject.toml`,
 `ayon-launcher/pyproject.toml` or an addon's `pyproject.toml` instead of the
-workspace project. `AYON_WORKSPACE_ROOT` may be set to override the default.
+workspace project.
+
+> **Why `args` use a literal path but `cwd` uses `${AYON_WORKSPACE_ROOT:...}`:**
+> Zed expands `${VAR:default}` in the `cwd` field, but passes `args` through
+> to the shell without expanding that form. The shell (zsh) then interprets
+> `${AYON_WORKSPACE_ROOT:/Users/...}` as its own parameter expansion and —
+> with the variable unset — produces an **empty string**. `uv run` would
+> parse the script name as the `--project` value, `-f` as its own
+> `--find-links` option, and fail with
+> `error: unexpected argument '--debug' found`. The literal path in `args`
+> avoids this; `cwd` keeps the env-overridable form, which Zed does expand
+> (`AYON_WORKSPACE_ROOT` may be set to override the `cwd` default).
 
 Task working-directory policy:
 
@@ -213,3 +224,23 @@ and exits 1.
 Dependencies are managed with `uv` (`pip install uv` first). Tasks install
 dependencies automatically when needed. `.env` files with `AYON_SERVER_URL`
 and `AYON_API_KEY` are required for server-related tasks.
+
+### `AYON_WORKSPACE_ROOT` in Zed
+
+To make the workspace root available as `AYON_WORKSPACE_ROOT` in every
+integrated terminal and task whenever Zed is open, add it to Zed's global
+settings (`~/.config/zed/settings.json`):
+
+```json
+"terminal": {
+  "env": {
+    "AYON_WORKSPACE_ROOT": "${AYON_WORKSPACE_ROOT}"
+  }
+}
+```
+
+Restart Zed (fully quit and reopen) for the change to take effect — it only
+applies to terminals spawned after the restart. As an alternative (or in
+addition), add `export AYON_WORKSPACE_ROOT=[path to this repo root folder]` to
+`~/.zshenv` so the variable exists in every zsh session, which Zed also
+picks up when launched from a terminal.

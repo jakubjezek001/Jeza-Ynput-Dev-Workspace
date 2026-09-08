@@ -4,10 +4,10 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "git-clone-all-repos"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "reveal": "always",
     "hide": "on_success"
   },
@@ -16,12 +16,12 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "upload-to-addon-folder",
       "-f", "$ZED_FILE",
       "--debug"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "reveal": "always",
     "hide": "on_success"
   },
@@ -30,12 +30,12 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "create-addon-package",
       "-f", "$ZED_FILE",
       "--debug"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "reveal": "always",
     "hide": "on_success"
   },
@@ -44,10 +44,10 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "update-ayon-docker-local-dir"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "use_new_terminal": true,
     "reveal": "always",
     "hide": "on_success"
@@ -57,10 +57,10 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "docs-initialize"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "reveal": "always",
     "hide": "on_success"
   },
@@ -69,10 +69,10 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "docs-start"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "use_new_terminal": true,
     "allow_concurrent_runs": true,
     "reveal": "always",
@@ -83,7 +83,7 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "git-commit-info-extraction",
       "-f", "$ZED_FILE"
     ],
@@ -98,7 +98,7 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "ruff", "check", "$ZED_FILE"
     ],
     "cwd": "$ZED_WORKTREE_ROOT",
@@ -110,13 +110,13 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "ayon-launch-app", "addon", "applications", "launch",
       "--project", "AY01_VFX_demo",
       "--folder", "shots/sq001/sh010",
       "--task", "comp"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "use_new_terminal": true,
     "reveal": "always",
     "hide": "on_success"
@@ -126,13 +126,13 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "ayon-launch-app", "addon", "applications", "launch",
       "--project", "AY01_VFX_demo",
       "--folder", "shots/sq001/sh010",
       "--task", "model"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "use_new_terminal": true,
     "reveal": "always",
     "hide": "on_success"
@@ -142,13 +142,13 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "ayon-launch-app", "addon", "applications", "launch",
       "--project", "AY01_VFX_demo",
       "--folder", "editorial",
       "--task", "conform"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "use_new_terminal": true,
     "reveal": "always",
     "hide": "on_success"
@@ -158,13 +158,13 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "ayon-launch-app", "addon", "traypublisher", "launch",
       "--project", "AY01_VFX_demo",
       "--folder-path", "/editorial",
       "--task-name", "edit"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "use_new_terminal": true,
     "reveal": "always",
     "hide": "on_success"
@@ -174,10 +174,10 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "launcher-dev-mode"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "use_new_terminal": true,
     "reveal": "always",
     "hide": "on_success"
@@ -187,12 +187,12 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "ayon-sdd", "worktree-setup",
       "--worktree", "$ZED_WORKTREE_ROOT",
       "--main", "$ZED_MAIN_GIT_WORKTREE"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "hooks": ["create_worktree"],
     "hide": "on_success"
   },
@@ -201,11 +201,11 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "ayon-sdd", "bootstrap",
       "--root", "$ZED_WORKTREE_ROOT"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "use_new_terminal": true,
     "reveal": "always",
     "hide": "never"
@@ -215,10 +215,10 @@
     "command": "uv",
     "args": [
       "run",
-      "--project", "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+      "--project", "${AYON_WORKSPACE_ROOT}",
       "ayon-sdd", "doctor"
     ],
-    "cwd": "${AYON_WORKSPACE_ROOT:/Users/jakub/CODE/__YNPUT}",
+    "cwd": "${AYON_WORKSPACE_ROOT}",
     "reveal": "always",
     "hide": "on_success"
   }
