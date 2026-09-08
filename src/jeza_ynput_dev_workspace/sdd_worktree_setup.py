@@ -95,25 +95,30 @@ def _copy_env(
 ) -> None:
     """Copy ``.env`` from the repo's main worktree if missing here (G3).
 
+    Also copies ``service_tools/.env`` the same way, if present.
+
     Args:
         main (Path): the repo's main worktree (has the real ``.env``).
         worktree (Path): the new linked worktree (never inherits it).
         dry_run (bool): if set, only log the planned change.
         log (logging.Logger): logger to report progress on.
     """
-    src = main / ".env"
-    dst = worktree / ".env"
-    if not src.exists():
-        log.info("No .env in main worktree, nothing to copy")
-        return
-    if dst.exists():
-        log.info(".env already present in new worktree, not overwriting")
-        return
-    if dry_run:
-        log.info(f"[dry-run] would copy {src} -> {dst}")
-        return
-    shutil.copy2(src, dst)
-    log.info(f"Copied {src} -> {dst}")
+    for rel in (Path(".env"), Path("service_tools") / ".env"):
+        src = main / rel
+        dst = worktree / rel
+        if not src.exists():
+            log.info("No %s in main worktree, nothing to copy", rel)
+            continue
+        if dst.exists():
+            log.info("%s already present in new worktree, not overwriting", rel)
+            continue
+        if dry_run:
+            log.info("[dry-run] would copy %s -> %s", src, dst)
+            continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+        log.info("Copied %s -> %s", src, dst)
+
 
 
 @click.command(name="worktree-setup")
