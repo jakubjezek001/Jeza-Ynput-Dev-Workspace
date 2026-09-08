@@ -25,6 +25,8 @@ SCOPE_REPOS = [
     "ayon-core",
     "ayon-launcher",
     "ayon-nuke",
+    "ayon-traypublisher",
+    "ayon-slater"
 ]
 
 # Repos this plan must never touch (IMPLEMENTATION-PLAN.md §1).
