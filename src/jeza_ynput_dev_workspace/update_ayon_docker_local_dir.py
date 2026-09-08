@@ -1,18 +1,26 @@
-import os
 import subprocess
+
+from .sdd_common import resolve_workspace_root
 
 
 def update_ayon_docker_local_dir():
     try:
-        # Change directory to ayon-docker
-        os.chdir('ayon-docker')
+        docker_dir = resolve_workspace_root() / "ayon-docker"
+        if not docker_dir.is_dir():
+            raise FileNotFoundError(docker_dir)
 
         # Execute docker compose commands
         print("Pulling server image...")
-        subprocess.run(['docker', 'compose', 'pull', 'server'], check=True)
+        subprocess.run(
+            ["docker", "compose", "pull", "server"], cwd=docker_dir, check=True
+        )
 
         print("Starting server container...")
-        subprocess.run(['docker', 'compose', 'up', '-d', 'server', '--build'], check=True)
+        subprocess.run(
+            ["docker", "compose", "up", "-d", "server", "--build"],
+            cwd=docker_dir,
+            check=True,
+        )
 
         print("Server successfully started!")
 

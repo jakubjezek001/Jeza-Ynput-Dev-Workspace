@@ -4,11 +4,11 @@
 
 Idempotently sets each in-scope repo's ``core.hooksPath`` to the shared,
 absolute hooks directory (G2), symlinks ``.agents-main`` to the local
-``ayon-agentic-instructions`` checkout, symlinks ``.zed`` to the shared
-workspace project config (verified safe in D3), and hides both from
+``ayon-agentic-instructions`` checkout, and symlinks only ``.zed/tasks.json``
+to the workspace task file. Repository-owned ``.zed/settings.json`` and
+``debug.json`` files remain untouched. The linked paths are hidden from
 ``git status`` via ``.git/info/exclude`` — without ever touching a repo's
-committed ``.gitignore`` (G4), and without a trailing slash on the symlink
-entries (G5, or the symlink itself is not recognised as ignored).
+committed ``.gitignore`` (G4).
 
 Both symlinks use a **relative** target (``../<name>``) because every repo
 in scope is a direct sibling of ``<ROOT>``. Linked *worktrees* of these
@@ -46,10 +46,10 @@ from .sdd_common import (
 # name -> relative symlink target, e.g. ".agents-main" -> "../<central repo>"
 LINKS = {
     ".agents-main": f"../{CENTRAL_REPO}",
-    ".zed": "../.zed",
+    ".zed/tasks.json": "../../.zed/tasks.json",
 }
 
-# No trailing slash on a symlinked directory (G5).
+# No trailing slash on symlink entries (G5).
 EXCLUDE_ENTRIES = [f"/{name}" for name in LINKS]
 
 # Skills written by the Spec Kit installer (S3/S4) are real, git-tracked
@@ -202,6 +202,7 @@ def _link_one_path(
     if dry_run:
         log.info(f"[dry-run] would symlink {link_path} -> {relative_target}")
         return
+    link_path.parent.mkdir(parents=True, exist_ok=True)
     link_path.symlink_to(relative_target)
     log.info(f"Symlinked {link_path} -> {relative_target}")
 
@@ -253,9 +254,7 @@ def _update_exclude(
     )
 
     wanted = [
-        entry
-        for entry in entries
-        if not is_tracked(repo, entry.lstrip("/"))
+        entry for entry in entries if not is_tracked(repo, entry.lstrip("/"))
     ]
 
     changed = False
@@ -294,6 +293,19 @@ def link_one(
     """
     hooks_path = root / ".githooks-shared"
     _set_hooks_path(repo, hooks_path, dry_run, log)
+
+    # Migrate the former whole-directory .zed link without touching a real
+    # repository-owned .zed directory.
+    legacy_zed = repo / ".zed"
+    if (
+        legacy_zed.is_symlink()
+        and legacy_zed.resolve() == (root / ".zed").resolve()
+    ):
+        if dry_run:
+            log.info(f"[dry-run] would replace legacy {legacy_zed} link")
+        else:
+            legacy_zed.unlink()
+            log.info(f"Replaced legacy {legacy_zed} directory link")
 
     for name, relative_target in LINKS.items():
         link_path = repo / name
@@ -346,6 +358,14 @@ def unlink_one(
 
     for name, relative_target in LINKS.items():
         _unlink_one_path(repo / name, relative_target, dry_run, log)
+
+    legacy_zed = repo / ".zed"
+    if legacy_zed.is_dir() and not legacy_zed.is_symlink():
+        task_path = legacy_zed / "tasks.json"
+        if not task_path.exists() and not any(legacy_zed.iterdir()):
+            if not dry_run:
+                legacy_zed.rmdir()
+            log.info(f"Removed empty {legacy_zed}")
 
     skills = _discover_shared_skills(root)
     skill_exclude_entries = [f"/.agents/skills/{name}" for name in skills]

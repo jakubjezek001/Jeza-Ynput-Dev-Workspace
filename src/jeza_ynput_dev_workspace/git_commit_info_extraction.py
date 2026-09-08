@@ -1,12 +1,10 @@
-import os
-import sys
 from pathlib import Path
 
 import click
 import git
 
-scripts_dir = Path(__file__).resolve().parent
-workspace_dir = Path(__file__).resolve().parent.parent.parent
+from .repo_context import resolve_checkout
+from .sdd_common import resolve_workspace_root
 
 
 @click.command()
@@ -25,29 +23,16 @@ def git_commit_info_extraction(file_path: Path):
         file_path (Path): File path, relative or absolute, pointing inside
             the workspace.
     """
-    repo_folders = os.listdir(workspace_dir.as_posix())
-
-    # get first folder from file path and check if ayon-* is in name
-    file_path = Path(file_path)
-    # normalize an absolute path (e.g. Zed's $ZED_FILE) to be relative to the
-    # workspace root, so the addon-folder lookup below works either way
-    if file_path.is_absolute():
-        try:
-            file_path = file_path.relative_to(workspace_dir)
-        except ValueError:
-            click.echo(f"Error: {file_path} is not inside workspace {workspace_dir}")
-            sys.exit(1)
-    # split path to get first folder
-    first_folder = file_path.parts[0]
-    if first_folder.startswith("ayon-") and first_folder in repo_folders:
-        repo_abs_path = workspace_dir / first_folder
-    else:
-        click.echo("Error: No valid addon path found")
-        sys.exit(1)
+    context = resolve_checkout(file_path, resolve_workspace_root())
+    if context is None:
+        raise click.ClickException(
+            f"Could not resolve an AYON checkout for {file_path}"
+        )
+    repo_abs_path = context.checkout_root
 
     def find_parent_branch(repo):
         """Find the parent branch"""
-        possible_parents = ['main', 'develop']
+        possible_parents = ["main", "develop"]
         for parent in possible_parents:
             if parent in repo.refs:
                 return parent
@@ -69,10 +54,12 @@ def git_commit_info_extraction(file_path: Path):
         fork_point = repo.git.merge_base(current_branch, parent_branch)
 
         # Get commits between fork point and current branch HEAD
-        commits = list(repo.iter_commits(f'{fork_point}..{current_branch}'))
+        commits = list(repo.iter_commits(f"{fork_point}..{current_branch}"))
 
         # Get branch creation date
-        branch_creation_date = commits[-1].committed_datetime if commits else None
+        branch_creation_date = (
+            commits[-1].committed_datetime if commits else None
+        )
 
         # Create markdown output
         output = f"# {current_branch}\n"
@@ -82,10 +69,10 @@ def git_commit_info_extraction(file_path: Path):
         # Iterate through commits in reverse order (oldest first)
         for commit in reversed(commits):
             # Get commit title (first line of message)
-            title = commit.message.split('\n')[0].strip()
+            title = commit.message.split("\n")[0].strip()
 
             # Get commit description (rest of the message)
-            description = '\n'.join(commit.message.split('\n')[1:]).strip()
+            description = "\n".join(commit.message.split("\n")[1:]).strip()
 
             # Add commit information to output
             output += f"## {title}\n"

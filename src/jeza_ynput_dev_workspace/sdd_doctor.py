@@ -10,7 +10,7 @@ the Phase G clean-folder proof (G5).
 
 Checks:
 
-- ``~/.config/zed/tasks.json`` parses as JSON (A1).
+- ``<ROOT>/.zed/tasks.json`` parses as JSON (A1).
 - ``~/.config/zed/AGENTS.md`` and ``~/.config/goose/AGENTS.md`` exist (A2/A3).
 - The central repo (``ayon-agentic-instructions``) is present at ``<ROOT>``.
 - Per in-scope repo present on disk: L2 linkage is clean (reuses
@@ -39,11 +39,11 @@ from .sdd_install_global import SHARED_SKILLS
 from .sdd_status import check_repo
 
 
-def _check_global_tasks_json(log: logging.Logger) -> List[str]:
-    """Return drift messages for ``~/.config/zed/tasks.json`` (A1)."""
-    path = Path.home() / ".config" / "zed" / "tasks.json"
+def _check_workspace_tasks_json(root: Path, log: logging.Logger) -> List[str]:
+    """Return drift messages for the canonical workspace task file."""
+    path = root / ".zed" / "tasks.json"
     if not path.is_file():
-        return [f"{path} is missing — run `ayon-sdd install-global`"]
+        return [f"{path} is missing — restore the workspace task file"]
     try:
         json.loads(path.read_text())
     except (json.JSONDecodeError, OSError) as exc:
@@ -137,7 +137,7 @@ def run_doctor(root: Path, log: logging.Logger) -> List[str]:
         List[str]: human-readable problem descriptions; empty means clean.
     """
     problems: List[str] = []
-    problems += _check_global_tasks_json(log)
+    problems += _check_workspace_tasks_json(root, log)
     problems += _check_global_agents_md(log)
     problems += _check_central_repo(root, log)
     problems += _check_repo_linkage(root, log)

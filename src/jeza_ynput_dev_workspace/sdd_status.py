@@ -3,10 +3,10 @@
 """Report L2 linkage drift across the in-scope repos — Phase D5 ``status``.
 
 Checks, for each repo, exactly what ``ayon-sdd link`` is supposed to have set
-up: an absolute ``core.hooksPath`` (G2), the ``.agents-main``/``.zed``
-symlinks resolving to the expected targets, and both hidden from
-``git status`` via ``.git/info/exclude`` (G4) — all read-only, this
-subcommand never writes anything.
+up: an absolute ``core.hooksPath`` (G2), the ``.agents-main`` and
+``.zed/tasks.json`` symlinks resolving to the expected targets, and both
+hidden from ``git status`` via ``.git/info/exclude`` (G4) — all read-only,
+this subcommand never writes anything.
 
 Script usage:
   uv run ayon-sdd status [--repo PATH ...] [--all]
@@ -54,7 +54,8 @@ def _check_link(
 
     Args:
         repo (Path): repository being checked.
-        name (str): the symlink's name inside the repo, e.g. ``.zed``.
+        name (str): the symlink's name inside the repo, e.g.
+            ``.zed/tasks.json``.
         relative_target (str): expected symlink target (from ``LINKS``).
         log (logging.Logger): logger for informational (non-drift) notes.
 

@@ -5,8 +5,8 @@
 Idempotently writes the files that make Zed and goose agent-aware from
 *any* project, not just this workspace root:
 
-- ``~/.config/zed/tasks.json``  — global Zed tasks, rendered from
-  ``templates/zed_tasks.json.tmpl`` (ported from ``<ROOT>/.zed/tasks.json``).
+This command deliberately does not manage Zed tasks. Zed task discovery is
+workspace-local and the canonical file is ``<ROOT>/.zed/tasks.json``.
 - ``~/.config/zed/AGENTS.md``   — global Zed personal agent instructions,
   rendered from ``templates/zed_agents.md.tmpl``.
 - ``~/.config/goose/AGENTS.md`` — symlinked to the file above, so goose picks
@@ -18,8 +18,10 @@ Idempotently writes the files that make Zed and goose agent-aware from
 It also *verifies* (never modifies) ``GOOSE_MODE`` in the user's
 ``~/.config/goose/config.yaml``.
 
-This is the only supported way to produce the L0 layer — the files above are
-generated output and must never be hand-edited once this command exists.
+This is the only supported way to produce the global agent layer — the files
+above are generated output and must never be hand-edited once this command
+exists. The old ``~/.config/zed/tasks.json`` output is no longer produced
+(task discovery is workspace-local, see ``<ROOT>/.zed/tasks.json``).
 
 Script usage:
   uv run ayon-sdd install-global [--dry-run]
@@ -86,31 +88,6 @@ def _render(template_name: str, root: Path) -> str:
     """
     text = (templates_dir / template_name).read_text()
     return text.replace(WORKSPACE_ROOT_TOKEN, str(root))
-
-
-def _install_tasks_json(
-    root: Path, dry_run: bool, log: logging.Logger
-) -> None:
-    """Render and write the global Zed tasks file (A1)."""
-    target = Path.home() / ".config" / "zed" / "tasks.json"
-    rendered = _render("zed_tasks.json.tmpl", root)
-
-    if (
-        target.exists()
-        and not target.is_symlink()
-        and target.read_text() == rendered
-    ):
-        log.info(f"{target} already up to date")
-        return
-
-    if dry_run:
-        log.info(f"[dry-run] would write {target}")
-        return
-
-    target.parent.mkdir(parents=True, exist_ok=True)
-    _backup_if_needed(target, log)
-    target.write_text(rendered)
-    log.info(f"Wrote {target}")
 
 
 def _install_agents_md(root: Path, dry_run: bool, log: logging.Logger) -> None:
@@ -246,10 +223,10 @@ def _verify_goose_mode(log: logging.Logger) -> None:
     help="Print the planned filesystem changes without writing anything.",
 )
 def install_global(dry_run):
-    """Render and install the L0 user-global SDD layer.
+    """Install user-global agent instructions and shared skills.
 
-    Writes ``~/.config/zed/tasks.json`` and ``~/.config/zed/AGENTS.md`` from
-    the templates in ``templates/``, symlinks ``~/.config/goose/AGENTS.md``
+    Writes ``~/.config/zed/AGENTS.md`` from the templates in ``templates/``,
+    symlinks ``~/.config/goose/AGENTS.md``
     to the latter, migrates the shared workspace skills to
     ``~/.agents/skills/`` with a symlink back for the workspace root, and
     verifies (without modifying) ``GOOSE_MODE`` in the goose config.
@@ -266,7 +243,6 @@ def install_global(dry_run):
         sys.exit(1)
     log.info(f"Workspace root: {root}")
 
-    _install_tasks_json(root, dry_run, log)
     _install_agents_md(root, dry_run, log)
     _install_shared_skills(root, dry_run, log)
     _verify_goose_mode(log)
@@ -274,7 +250,10 @@ def install_global(dry_run):
     if dry_run:
         log.info("Dry run complete — no files were changed.")
     else:
-        log.info("Global (L0) SDD layer installed.")
+        log.info(
+            "Global agent instructions and skills installed; Zed tasks "
+            "remain workspace-local."
+        )
 
 
 if __name__ == "__main__":

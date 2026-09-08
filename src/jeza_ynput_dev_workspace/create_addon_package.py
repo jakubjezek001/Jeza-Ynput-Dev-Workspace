@@ -1,26 +1,19 @@
 #!/usr/bin/env python
 
-"""Create addon package and open browser.
-
-Script is used to create an addon package and open the browser to the package.
-
-"""
+"""Create an AYON addon package from the selected checkout."""
 
 import logging
-import os
+import platform
 import subprocess
 import sys
-from pathlib import Path
 
 import click
 from dotenv import load_dotenv
 
+from .repo_context import resolve_checkout
+from .sdd_common import resolve_workspace_root
+
 load_dotenv()
-
-scripts_dir = Path(__file__).resolve().parent
-workspace_dir = Path(__file__).resolve().parent.parent.parent
-
-python_exe = sys.executable
 
 
 @click.command()
@@ -30,81 +23,54 @@ python_exe = sys.executable
     "--file-path",
     "file_path",
     required=True,
-    help="File path, relative or absolute, pointing inside the workspace.",
+    help="File path, relative or absolute, inside an AYON checkout.",
 )
 def create_addon_package(debug, file_path):
-    # Set Log Level and create log object
-    level = logging.INFO
+    """Create a package using the selected file's actual checkout."""
+    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
+    log = logging.getLogger("create_package")
+    workspace_root = resolve_workspace_root()
+    context = resolve_checkout(file_path, workspace_root)
+    if context is None:
+        raise click.ClickException(
+            f"Could not resolve an AYON checkout for {file_path}"
+        )
+
+    create_package_script = context.checkout_root / "create_package.py"
+    if not create_package_script.is_file():
+        raise click.ClickException(
+            f"create_package.py not found in {context.checkout_root}"
+        )
+
+    command = [sys.executable, str(create_package_script)]
+    log.info("Running from %s: %s", context.checkout_root, " ".join(command))
+    try:
+        result = subprocess.run(
+            command,
+            cwd=str(context.checkout_root),
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        if exc.stdout:
+            log.error(exc.stdout)
+        if exc.stderr:
+            log.error(exc.stderr)
+        raise click.ClickException(
+            f"Package creation failed for {context.addon_name}"
+        ) from exc
+
     if debug:
-        level = logging.DEBUG
-    logging.basicConfig(level=level)
-    log: logging.Logger = logging.getLogger("upload_package")
-
-    repo_folders = os.listdir(workspace_dir.as_posix())
-
-    # get first folder from file path and check if ayon-* is in name
-    addons = []
-    file_path = Path(file_path)
-    # normalize an absolute path (e.g. Zed's $ZED_FILE) to be relative to the
-    # workspace root, so the addon-folder lookup below works either way
-    if file_path.is_absolute():
-        try:
-            file_path = file_path.relative_to(workspace_dir)
-        except ValueError:
-            log.error(f"File path {file_path} is not inside workspace {workspace_dir}")
-            sys.exit(1)
-    # split path to get first folder
-    first_folder = file_path.parts[0]
-    if first_folder.startswith("ayon-"):
-        addons.append(first_folder)
+        if result.stdout:
+            log.debug(result.stdout)
+        if result.stderr:
+            log.debug(result.stderr)
+    package_dir = context.checkout_root / "package"
+    log.info("Package created successfully: %s", package_dir)
+    if platform.system() == "Darwin":
+        subprocess.run(["open", str(package_dir)], check=False)
+    elif platform.system() == "Windows":
+        subprocess.run(["explorer", str(package_dir)], check=False)
     else:
-        log.error("No valid addon path found")
-        sys.exit(1)
-
-    processed_addons = []
-    for addon in addons:
-        if addon not in repo_folders:
-            log.warning(f"Addon {addon} not found in workspace")
-            continue
-
-        addon_repo_dir = workspace_dir / addon
-        addon_package_dir = addon_repo_dir / "package"
-        create_package_script = addon_repo_dir / "create_package.py"
-
-        if not create_package_script.exists():
-            log.error(f"create_package.py not found in {addon_repo_dir}")
-            continue
-
-        # Use subprocess instead of os.system for better error handling
-        cmd = [
-            python_exe,
-            str(create_package_script),
-        ]
-
-        log.info(f"Running: {' '.join(cmd)}")
-
-        try:
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-            log.info(f"Package created successfully for {addon}")
-            if debug:
-                log.debug(f"Output: {result.stdout}")
-        except subprocess.CalledProcessError as e:
-            log.error(f"Failed to create package for {addon}: {e}")
-            log.error(f"Error output: {e.stderr}")
-            continue
-
-        processed_addons.append(addon)
-
-    if not processed_addons:
-        log.error("No addons found to process.")
-        sys.exit(1)
-
-    # now open default file explorer to show the package root folder
-    # make sure it treats macos and windows or linux differently
-    log.info(f"Opening file explorer for {addon_package_dir}")
-    if sys.platform == "darwin":
-        subprocess.run(["open", str(addon_package_dir)])
-    elif sys.platform == "win32":
-        subprocess.run(["explorer", str(addon_package_dir)])
-    else:
-        subprocess.run(["xdg-open", str(addon_package_dir)])
+        subprocess.run(["xdg-open", str(package_dir)], check=False)

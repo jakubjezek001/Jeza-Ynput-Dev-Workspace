@@ -8,8 +8,9 @@ worktree can be created through:
 - the shared ``post-checkout`` git hook
   (``<ROOT>/.githooks-shared/post-checkout``, wired per-repo via
   ``core.hooksPath`` — D1/D2), for ``git worktree add``.
-- the global Zed ``create_worktree`` task (``~/.config/zed/tasks.json`` — D4),
-  for worktrees created through Zed's worktree picker.
+- the workspace-local Zed ``create_worktree`` task
+  (``<workspace>/.zed/tasks.json`` — D4), for worktrees created through
+  Zed's worktree picker.
 
 Both call
 ``uv run ayon-sdd worktree-setup --worktree <new> --main <repo-main>``
@@ -19,9 +20,10 @@ same logic"*).
 
 Unlike ``ayon-sdd link`` (same-directory siblings under ``<ROOT>``, so
 relative symlinks work), a linked worktree can live at any depth relative to
-``<ROOT>`` (e.g. ``ayon-nuke.worktrees/<branch>/``), so this module always
-uses **absolute** symlink targets, resolved from ``<ROOT>`` (never a
-hardcoded path — see ``sdd_common.resolve_workspace_root``).
+``<ROOT>``, so this module uses an **absolute** target for
+``.zed/tasks.json`` (never a hardcoded path — see
+``sdd_common.resolve_workspace_root``). Repository-local Zed settings and
+debug files are not replaced.
 
 Script usage:
   uv run ayon-sdd worktree-setup --worktree PATH --main PATH [--dry-run]
@@ -155,7 +157,22 @@ def worktree_setup(worktree: str, main_worktree: str, dry_run: bool) -> None:
         _relink_absolute(
             worktree_path / ".agents-main", root / CENTRAL_REPO, dry_run, log
         )
-        _relink_absolute(worktree_path / ".zed", root / ".zed", dry_run, log)
+        legacy_zed = worktree_path / ".zed"
+        if (
+            legacy_zed.is_symlink()
+            and legacy_zed.resolve() == (root / ".zed").resolve()
+        ):
+            if dry_run:
+                log.info(f"[dry-run] would replace legacy {legacy_zed} link")
+            else:
+                legacy_zed.unlink()
+                log.info(f"Replaced legacy {legacy_zed} directory link")
+        _relink_absolute(
+            worktree_path / ".zed" / "tasks.json",
+            root / ".zed" / "tasks.json",
+            dry_run,
+            log,
+        )
         _copy_env(main_path, worktree_path, dry_run, log)
     except Exception as exc:  # noqa: BLE001 - never fail the checkout (D1 rule 5)
         log.warning(f"worktree-setup hit a problem, continuing anyway: {exc}")

@@ -33,12 +33,10 @@ import click
 from ayon_api import get_server_api_connection
 from dotenv import load_dotenv
 
+from .repo_context import resolve_checkout
+from .sdd_common import resolve_workspace_root
+
 load_dotenv()
-
-scripts_dir = Path(__file__).resolve().parent
-workspace_dir = Path(__file__).resolve().parent.parent.parent
-
-docker_addons_dir = workspace_dir / "ayon-docker" / "addons"
 
 python_exe = sys.executable
 
@@ -73,42 +71,10 @@ def _resolve_addon(
         tuple[str, Path] | None: ``(addon_name, addon_repo_dir)``, or
         ``None`` if the addon could not be determined.
     """
-    search_dir = file_path if file_path.is_dir() else file_path.parent
-
-    def _git(*args: str) -> str | None:
-        try:
-            return subprocess.run(
-                ["git", "-C", str(search_dir), *args],
-                check=True,
-                capture_output=True,
-                text=True,
-            ).stdout.strip()
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            return None
-
-    common_dir = _git(
-        "rev-parse", "--path-format=absolute", "--git-common-dir"
-    )
-    if common_dir:
-        addon_name = Path(common_dir).parent.name
-        if addon_name.startswith("ayon-"):
-            toplevel = _git("rev-parse", "--show-toplevel")
-            addon_dir = (
-                Path(toplevel) if toplevel else workspace_dir / addon_name
-            )
-            return addon_name, addon_dir
-
-    if file_path.is_absolute():
-        try:
-            file_path = file_path.relative_to(workspace_dir)
-        except ValueError:
-            return None
-    if not file_path.parts:
+    context = resolve_checkout(file_path, workspace_dir)
+    if context is None:
         return None
-    first_folder = file_path.parts[0]
-    if first_folder.startswith("ayon-"):
-        return first_folder, workspace_dir / first_folder
-    return None
+    return context.addon_name, context.checkout_root
 
 
 @click.command()
@@ -138,13 +104,12 @@ def upload_to_addon_folder(debug, file_path):
         log.error("Please ensure these are set in your .env file")
         sys.exit(1)
 
-    # Check if docker addons directory exists
+    workspace_dir = resolve_workspace_root()
+    docker_addons_dir = workspace_dir / "ayon-docker" / "addons"
     if not docker_addons_dir.exists():
         log.error(f"Docker addons directory not found: {docker_addons_dir}")
         log.error("Please ensure ayon-docker repository is cloned")
         sys.exit(1)
-
-    repo_folders = os.listdir(workspace_dir.as_posix())
 
     addon_resolved = _resolve_addon(Path(file_path), workspace_dir)
     if addon_resolved is None:
@@ -154,10 +119,6 @@ def upload_to_addon_folder(debug, file_path):
 
     processed_addons = []
     for addon, addon_repo_dir in addons:
-        if addon not in repo_folders:
-            log.warning(f"Addon {addon} not found in workspace")
-            continue
-
         create_package_script = addon_repo_dir / "create_package.py"
 
         if not create_package_script.exists():
@@ -177,7 +138,11 @@ def upload_to_addon_folder(debug, file_path):
 
         try:
             result = subprocess.run(
-                cmd, check=True, capture_output=True, text=True
+                cmd,
+                cwd=str(addon_repo_dir),
+                check=True,
+                capture_output=True,
+                text=True,
             )
             log.info(f"Package created successfully for {addon}")
             if debug:
