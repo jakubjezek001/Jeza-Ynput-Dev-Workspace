@@ -20,6 +20,14 @@ Read the page that matches the repository you are working in:
 If the repository has its own `AGENTS.md`, read that too. It adds
 repo-specific facts on top of these rules.
 
+## Decide who does what
+
+Before reading code, split the task with
+[../subagents.md](../subagents.md#routing): the survey (Article 10) goes to
+`repo-scout`, the [impact analysis](#impact-analysis-before-a-change) to
+`impact-scout`, the review checks before the PR to `diff-reviewer`, the PR
+description to `pr-writer`.
+
 ## Rules
 
 - Reuse shared addon/API helpers for host operations, metadata, containers,

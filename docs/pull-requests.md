@@ -51,3 +51,6 @@ Never name or describe a private repository or client material in a PR
    title with the title template.
 3. Update the PR (e.g. `gh pr edit <pr-url> --title … --body-file …`).
    When updating through the REST API, send `maintainer_can_modify: false`.
+
+With the branch checked out, steps 1 and 2 go to `pr-writer` on the light
+tier ([subagents.md](subagents.md#routing)); review its file before step 3.
