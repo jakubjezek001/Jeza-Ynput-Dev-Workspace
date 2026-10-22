@@ -10,9 +10,15 @@ them. Nothing here depends on one agent or harness.
 - `docs/` holds every instruction. Add a page here instead of growing
   `AGENTS.md`.
 - No harness-specific files are committed (`CLAUDE.md`, `GEMINI.md`,
-  `.cursorrules`, `.github/copilot-instructions.md`, `.agents/`, `.goose/`,
-  `.kilo/`, ...). Plain Markdown links are used instead of any `@`-import
-  syntax, so every agent can follow them.
+  `.cursorrules`, `.github/copilot-instructions.md`, `.claude/`,
+  `.cursor/`, `.codex/`, `.gemini/`, `.opencode/`, `.goose/`, `.kilo/`,
+  ...). Plain Markdown links are used instead of any `@`-import syntax, so
+  every agent can follow them.
+- `.agents/` is the one harness-neutral agent folder that is committed. It
+  holds the subagents (`.agents/agents/`, a small frontmatter: `name`,
+  `description`, `tier`, `tools`) and their tier map.
+  `uv run ayon-workspace agents sync` writes each harness's copy from it,
+  and those copies stay gitignored ([subagents.md](subagents.md)).
 
 ## Making your agent read `AGENTS.md`
 

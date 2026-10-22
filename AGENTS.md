@@ -9,6 +9,11 @@ IMPORTANT: each `ayon-*` folder is its own git repository. Never commit its
 content here, and never modify `ayon-backend`, `ayon-frontend` or
 `ayon-docker`.
 
+Before any development work, split the task and decide who does each part
+(a script, you, or a subagent on its tier) with
+[docs/subagents.md](docs/subagents.md#routing), and state the split in one
+line before you start.
+
 ## Docs
 
 - [docs/workspace.md](docs/workspace.md) — layout, guardrails, `.env` keys.
@@ -20,6 +25,8 @@ content here, and never modify `ayon-backend`, `ayon-frontend` or
   addon principles.
 - [docs/ayon/review-checks.md](docs/ayon/review-checks.md) — review checks
   and audit procedures.
+- [docs/subagents.md](docs/subagents.md) — routing work to subagents,
+  tiers, `ayon-workspace agents`.
 - [docs/pull-requests.md](docs/pull-requests.md) — PR title and description.
 - [docs/agent-instructions.md](docs/agent-instructions.md) — how these
   instructions are organised and how to write them.

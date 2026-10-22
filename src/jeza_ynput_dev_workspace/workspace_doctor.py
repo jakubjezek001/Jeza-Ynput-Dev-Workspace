@@ -12,6 +12,8 @@ Checks:
 - Per in-scope repo present on disk: the linkage is clean (reuses
   ``workspace_status.check_repo`` — one definition, no drift between
   ``status`` and ``doctor``).
+- Every harness's copy of the subagents matches ``.agents/agents/``
+  (reuses ``workspace_agents.check_agents``).
 
 Script usage:
   uv run ayon-workspace doctor
@@ -24,6 +26,7 @@ from typing import List
 
 import click
 
+from .workspace_agents import check_agents
 from .workspace_common import SCOPE_REPOS, resolve_workspace_root
 from .workspace_status import check_repo
 
@@ -70,6 +73,7 @@ def run_doctor(root: Path, log: logging.Logger) -> List[str]:
     problems: List[str] = []
     problems += _check_workspace_tasks_json(root, log)
     problems += _check_repo_linkage(root, log)
+    problems += check_agents(root, log)
     return problems
 
 

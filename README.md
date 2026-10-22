@@ -27,6 +27,7 @@ tasks from the command palette with `tasks: spawn`. Server tools need a
 - [Workspace layout and guardrails](docs/workspace.md)
 - [Commands, Zed tasks and bootstrap](docs/workspace-tooling.md)
 - [AYON development rules](docs/ayon/development-rules.md)
+- [Subagents and model tiers](docs/subagents.md)
 - [Pull request conventions](docs/pull-requests.md)
 
 Coding agents start from [AGENTS.md](AGENTS.md).
