@@ -179,6 +179,17 @@ The workspace includes several pre-configured tasks that can be executed through
 - Terminal remains visible for monitoring
 - Documentation server will stay active for real-time preview
 
+#### 6. Remove unused addon versions
+**Purpose:** Removes the `ayon-docker/addons/<addon>/<version>` folders that no active (non-archived) bundle pins.
+**Usage:**
+- "Remove unused addon versions (dry run)" only lists the folders and their sizes
+- "Remove unused addon versions and restart" asks `[y/N]`, deletes them, restarts the server and checks it lists exactly the versions left on disk
+- Run from an addon repository (main checkout or worktree), it covers only that addon's versions (name from its `package.py`); run from anywhere else, every addon
+- Always kept whole: `sn4`, and addons an active bundle has an enabled dev path for but pins no version of; an addon with no version left is removed as a whole folder
+- Command line: `uv run remove-unused-addons --help` (`--addon`, `--keep`, `--apply`, `--yes`, `--no-restart`)
+**Requirements:**
+- .env file with `AYON_API_KEY` and `AYON_SERVER_URL` variables
+
 ## Task Execution Behavior
 
 All tasks are configured with the following common behaviors:

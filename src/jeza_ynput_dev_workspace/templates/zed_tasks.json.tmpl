@@ -39,6 +39,33 @@
     "hide": "on_success"
   },
   {
+    "label": "Utils / Remove unused addon versions (dry run)",
+    "command": "uv",
+    "args": [
+      "run",
+      "--project", "__AYON_WORKSPACE_ROOT__",
+      "remove-unused-addons",
+      "--path", "$ZED_WORKTREE_ROOT"
+    ],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "always",
+    "hide": "never"
+  },
+  {
+    "label": "Utils / Remove unused addon versions and restart",
+    "command": "uv",
+    "args": [
+      "run",
+      "--project", "__AYON_WORKSPACE_ROOT__",
+      "remove-unused-addons",
+      "--path", "$ZED_WORKTREE_ROOT",
+      "--apply"
+    ],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "always",
+    "hide": "never"
+  },
+  {
     "label": "Utils / Update AYON server",
     "command": "uv",
     "args": [
