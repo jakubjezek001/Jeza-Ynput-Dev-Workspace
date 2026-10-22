@@ -19,6 +19,8 @@ repositories and are gitignored.
 | `.zed/` | Workspace Zed tasks, settings, debug config | yes |
 | `.githooks-shared/` | Shared `post-checkout` hook for linked repos | yes |
 | `docs/` | Agent and developer instructions | yes |
+| `config/agents/`, `config/agents.json` | Subagent definitions and their tier → model map ([subagents.md](subagents.md)) | yes |
+| `.claude/agents/` | Subagent files generated from `config/agents/` | no |
 | `ayon-*/`, `pytest-ayon/`, `OpenPype-premium/` | Independent repositories, each with its own git history | no |
 | `worktrees/<repo>/<branch>/` | Linked git worktrees for parallel work | no |
 | `__TESTs/`, `__CLIENTS_WORK/` | Personal test data, client material | no |

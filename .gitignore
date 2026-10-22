@@ -36,3 +36,7 @@ pytest-ayon
 # (see docs/agent-instructions.md) — never committed.
 CLAUDE.md
 GEMINI.md
+
+# Harness subagent files generated from config/agents/
+# (`uv run ayon-workspace agents sync`, see docs/subagents.md).
+.claude/agents/

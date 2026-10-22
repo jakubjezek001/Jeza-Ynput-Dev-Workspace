@@ -19,7 +19,7 @@ on first use. Python is pinned to `>=3.9.19,<3.11`.
 | `git-commit-info-extraction` | Print the commit history of the current branch in the repo that contains `-f <file>` |
 | `ayon-launch-app` | Run any `ayon-launcher` `start.py` addon command through the launcher venv (e.g. `addon applications launch --project … --folder … --task …`) |
 | `launcher-dev-mode` | Start `ayon-launcher` in dev mode |
-| `ayon-workspace` | Workspace setup: Zed task linking for repos and worktrees, bootstrap (see below) |
+| `ayon-workspace` | Workspace setup: Zed task linking for repos and worktrees, subagent files, bootstrap (see below) |
 
 The click-based commands accept `--help`. The required `.env` keys are listed in
 [workspace.md](workspace.md#environment).
@@ -90,6 +90,7 @@ uv run ayon-workspace link   (--repo PATH ... | --all) [--dry-run]
 uv run ayon-workspace unlink (--repo PATH ... | --all) [--dry-run]
 uv run ayon-workspace status (--repo PATH ... | --all)
 uv run ayon-workspace doctor                       # read-only health check
+uv run ayon-workspace agents (list | tier TIER | sync [--check])
 uv run ayon-workspace bootstrap [--root PATH] [--dry-run] [--skip-clone] [--all]
 ```
 
@@ -107,8 +108,12 @@ uv run ayon-workspace bootstrap [--root PATH] [--dry-run] [--skip-clone] [--all]
   `Utils / Set up new worktree` Zed task (`create_worktree` hook). It links
   `.zed/tasks.json` with an absolute target and copies `.env` and
   `service_tools/.env` from the main checkout. It never fails a checkout.
-- `doctor` checks that `<root>/.zed/tasks.json` parses and that every
-  linked repo on disk is clean. It exits 1 on drift.
+- `doctor` checks that `<root>/.zed/tasks.json` parses, that every
+  linked repo on disk is clean, and that the generated subagent files match
+  `config/agents/`. It exits 1 on drift.
+- `agents` lists the subagent definitions with the model their tier gets,
+  and `sync` writes the harness files from them
+  ([subagents.md](subagents.md#the-pieces)).
 
 ### Why it is built this way
 
@@ -145,6 +150,7 @@ uv run ayon-workspace bootstrap --root "$PWD"
 
 Bootstrap clones the repos in `SCOPE_REPOS` plus the read-only server repos
 (`--all` clones the full `ALL_REPOS` list, `--skip-clone` clones nothing),
-links the repos, and finishes with `doctor`. Every step is idempotent, so
+links the repos, writes the subagent files (`agents sync`), and finishes
+with `doctor`. Every step is idempotent, so
 re-running it is safe. Then set `AYON_WORKSPACE_ROOT` for Zed (see
 [Zed tasks](#zed-tasks)).

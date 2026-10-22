@@ -16,7 +16,9 @@ already-idempotent building blocks:
    ``git_clone_all_repos.clone_repos`` — reused, not reimplemented.
 4. ``link`` every in-scope repo on disk (``.zed/tasks.json`` symlink +
    shared hook).
-5. ``doctor`` — fail loudly with a per-check report if anything is off.
+5. ``agents sync`` — write the harness's subagent files from
+   ``config/agents/`` (they are gitignored, see docs/subagents.md).
+6. ``doctor`` — fail loudly with a per-check report if anything is off.
 
 Every step honours ``--dry-run``; the whole command is idempotent.
 
@@ -34,6 +36,7 @@ from pathlib import Path
 import click
 
 from .git_clone_all_repos import ALL_REPOS, clone_repos
+from .workspace_agents import sync_agents
 from .workspace_common import DEFAULT_CLONE_REPOS, SCOPE_REPOS
 from .workspace_doctor import run_doctor
 from .workspace_link import link_one
@@ -175,7 +178,13 @@ def bootstrap(
         else:
             log.info(f"{name}: not on disk, skipping link")
 
-    log.info("=== 5. Doctor ===")
+    log.info("=== 5. Sync subagent files ===")
+    try:
+        sync_agents(root, "", dry_run, log)
+    except click.ClickException as exc:
+        log.warning(f"Subagent files not synced: {exc.message}")
+
+    log.info("=== 6. Doctor ===")
     if dry_run:
         log.info("[dry-run] would run `ayon-workspace doctor`")
         return

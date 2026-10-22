@@ -12,6 +12,7 @@ with this one command. See docs/workspace-tooling.md.
 import click
 
 from .bootstrap_workspace import bootstrap
+from .workspace_agents import agents
 from .workspace_doctor import doctor
 from .workspace_link import link, unlink
 from .workspace_status import status
@@ -29,6 +30,7 @@ ayon_workspace.add_command(status, name="status")
 ayon_workspace.add_command(worktree_setup, name="worktree-setup")
 ayon_workspace.add_command(doctor, name="doctor")
 ayon_workspace.add_command(bootstrap, name="bootstrap")
+ayon_workspace.add_command(agents, name="agents")
 
 
 if __name__ == "__main__":

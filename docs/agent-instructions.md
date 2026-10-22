@@ -13,6 +13,11 @@ them. Nothing here depends on one agent or harness.
   `.cursorrules`, `.github/copilot-instructions.md`, `.agents/`, `.goose/`,
   `.kilo/`, ...). Plain Markdown links are used instead of any `@`-import
   syntax, so every agent can follow them.
+- Subagents are defined once, provider-neutrally, in `config/agents/` (a
+  small frontmatter: `name`, `description`, `tier`, `tools`).
+  `uv run ayon-workspace agents sync` generates the harness's own files
+  from them (`.claude/agents/`), which stay gitignored
+  ([subagents.md](subagents.md)).
 
 ## Making your agent read `AGENTS.md`
 
