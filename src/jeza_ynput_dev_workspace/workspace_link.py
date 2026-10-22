@@ -1,33 +1,24 @@
 #!/usr/bin/env python
 
-"""Wire (and unwire) a repo into the L2 shared-config layer — Phase D2/E4.
+"""Wire (and unwire) a repo into the workspace linkage.
 
-Idempotently sets each in-scope repo's ``core.hooksPath`` to the shared,
-absolute hooks directory (G2), symlinks ``.agents-main`` to the local
-``ayon-agentic-instructions`` checkout, symlinks ``.zed`` to the shared
-workspace project config (verified safe in D3), and hides both from
-``git status`` via ``.git/info/exclude`` — without ever touching a repo's
-committed ``.gitignore`` (G4), and without a trailing slash on the symlink
-entries (G5, or the symlink itself is not recognised as ignored).
+Idempotently sets each repo's ``core.hooksPath`` to the shared, absolute
+hooks directory (``<ROOT>/.githooks-shared``), symlinks ``.zed`` to the
+shared workspace project config so the workspace Zed tasks are available
+inside the repo, and hides the symlink from ``git status`` via
+``.git/info/exclude`` — without ever touching a repo's committed
+``.gitignore``, and without a trailing slash on the symlink entry (or the
+symlink itself is not recognised as ignored).
 
-Both symlinks use a **relative** target (``../<name>``) because every repo
+The symlink uses a **relative** target (``../.zed``) because every repo
 in scope is a direct sibling of ``<ROOT>``. Linked *worktrees* of these
-repos live at a different depth, so ``ayon-sdd worktree-setup`` (D1/D4)
-performs the equivalent job with **absolute** targets instead — see that
-module's docstring.
-
-Phase E, E4 adds one more thing: each *shared* skill authored directly in
-``ayon-agentic-instructions/.agents/skills/`` (e.g. ``harsh-code-review``) is
-individually symlinked into ``<repo>/.agents/skills/<name>`` so Zed sees it
-project-locally (Z3, N3), the same symlink shape already verified to work
-with goose. The ``speckit-*`` skills are **not** touched here — those are
-real, git-tracked files written by the Spec Kit installer (S3/S4), not part
-of the central repo's own skill set, and must never be replaced by a
-symlink.
+repos live at a different depth, so ``ayon-workspace worktree-setup``
+performs the equivalent job with an **absolute** target instead — see that
+module's docstring. Background: docs/workspace-tooling.md.
 
 Script usage:
-  uv run ayon-sdd link   [--repo PATH ...] [--all] [--dry-run]
-  uv run ayon-sdd unlink [--repo PATH ...] [--all] [--dry-run]
+  uv run ayon-workspace link   [--repo PATH ...] [--all] [--dry-run]
+  uv run ayon-workspace unlink [--repo PATH ...] [--all] [--dry-run]
 """
 
 import logging
@@ -36,51 +27,19 @@ from pathlib import Path
 
 import click
 
-from .sdd_common import (
-    CENTRAL_REPO,
+from .workspace_common import (
     is_tracked,
     resolve_target_repos,
     resolve_workspace_root,
 )
 
-# name -> relative symlink target, e.g. ".agents-main" -> "../<central repo>"
+# name -> relative symlink target
 LINKS = {
-    ".agents-main": f"../{CENTRAL_REPO}",
     ".zed": "../.zed",
 }
 
-# No trailing slash on a symlinked directory (G5).
+# No trailing slash on a symlinked directory.
 EXCLUDE_ENTRIES = [f"/{name}" for name in LINKS]
-
-# Skills written by the Spec Kit installer (S3/S4) are real, git-tracked
-# files, not part of the central repo's own shared skill set — never
-# symlink over them (E4).
-SPECKIT_SKILL_PREFIX = "speckit-"
-
-
-def _discover_shared_skills(root: Path) -> list:
-    """List shared skill names to symlink into every repo (Phase E, E4).
-
-    Only skills authored directly in
-    ``ayon-agentic-instructions/.agents/skills/`` are eligible — see
-    ``SPECKIT_SKILL_PREFIX`` above for why ``speckit-*`` is excluded.
-
-    Args:
-        root (Path): resolved workspace root.
-
-    Returns:
-        list[str]: skill directory names, sorted for stable ordering.
-    """
-    skills_dir = root / CENTRAL_REPO / ".agents" / "skills"
-    if not skills_dir.is_dir():
-        return []
-    return sorted(
-        entry.name
-        for entry in skills_dir.iterdir()
-        if entry.is_dir()
-        and not entry.name.startswith(".")
-        and not entry.name.startswith(SPECKIT_SKILL_PREFIX)
-    )
 
 
 def _get_git_config(repo: Path, key: str) -> str:
@@ -108,7 +67,7 @@ def _set_hooks_path(
     dry_run: bool,
     log: logging.Logger,
 ) -> None:
-    """Idempotently set ``core.hooksPath`` to an absolute path (G2/G3)."""
+    """Idempotently set ``core.hooksPath`` to an absolute path."""
     current = _get_git_config(repo, "core.hooksPath")
     if current == str(hooks_path):
         log.info(f"{repo.name}: core.hooksPath already {hooks_path}")
@@ -241,8 +200,7 @@ def _update_exclude(
     Args:
         repo (Path): repository to update.
         entries (list[str]): ``.git/info/exclude`` entries (each already
-            formatted, e.g. ``/.agents-main`` or
-            ``/.agents/skills/harsh-code-review``, no trailing slash — G5).
+            formatted, e.g. ``/.zed``, no trailing slash).
         add (bool): if set, add entries; otherwise remove them.
         dry_run (bool): if set, only log the planned change.
         log (logging.Logger): logger to report progress on.
@@ -284,7 +242,7 @@ def _update_exclude(
 def link_one(
     repo: Path, root: Path, dry_run: bool, log: logging.Logger
 ) -> None:
-    """Perform D2 (+ Phase E, E4 skill symlinks) for a single repo.
+    """Wire a single repo into the workspace linkage.
 
     Args:
         repo (Path): repository to wire.
@@ -305,29 +263,7 @@ def link_one(
             continue
         _link_one_path(link_path, relative_target, dry_run, log)
 
-    skills = _discover_shared_skills(root)
-    skill_exclude_entries = [f"/.agents/skills/{name}" for name in skills]
-    for name in skills:
-        relative_name = f".agents/skills/{name}"
-        if is_tracked(repo, relative_name):
-            log.info(
-                f"{repo.name}: {relative_name} is tracked by git, "
-                f"link skipped by design"
-            )
-            continue
-        link_path = repo / ".agents" / "skills" / name
-        if not dry_run:
-            link_path.parent.mkdir(parents=True, exist_ok=True)
-        relative_target = f"../../.agents-main/.agents/skills/{name}"
-        _link_one_path(link_path, relative_target, dry_run, log)
-
-    _update_exclude(
-        repo,
-        EXCLUDE_ENTRIES + skill_exclude_entries,
-        add=True,
-        dry_run=dry_run,
-        log=log,
-    )
+    _update_exclude(repo, EXCLUDE_ENTRIES, add=True, dry_run=dry_run, log=log)
 
 
 def unlink_one(
@@ -347,24 +283,7 @@ def unlink_one(
     for name, relative_target in LINKS.items():
         _unlink_one_path(repo / name, relative_target, dry_run, log)
 
-    skills = _discover_shared_skills(root)
-    skill_exclude_entries = [f"/.agents/skills/{name}" for name in skills]
-    for name in skills:
-        relative_target = f"../../.agents-main/.agents/skills/{name}"
-        _unlink_one_path(
-            repo / ".agents" / "skills" / name,
-            relative_target,
-            dry_run,
-            log,
-        )
-
-    _update_exclude(
-        repo,
-        EXCLUDE_ENTRIES + skill_exclude_entries,
-        add=False,
-        dry_run=dry_run,
-        log=log,
-    )
+    _update_exclude(repo, EXCLUDE_ENTRIES, add=False, dry_run=dry_run, log=log)
 
 
 @click.command(name="link")
@@ -382,7 +301,7 @@ def unlink_one(
     "--dry-run", is_flag=True, help="Print the plan without writing anything."
 )
 def link(repos: tuple, use_all: bool, dry_run: bool) -> None:
-    """Wire one or more repos into the L2 shared-config layer (D2).
+    """Wire one or more repos into the workspace linkage.
 
     Args:
         repos (tuple): explicit ``--repo`` paths.

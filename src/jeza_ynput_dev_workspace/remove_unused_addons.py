@@ -43,7 +43,7 @@ import requests
 from ayon_api import ServerAPI, get_server_api_connection
 from dotenv import load_dotenv
 
-from .sdd_common import resolve_workspace_root
+from .workspace_common import resolve_workspace_root
 
 load_dotenv()
 

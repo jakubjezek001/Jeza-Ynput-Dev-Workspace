@@ -1,15 +1,15 @@
 #!/bin/bash
-# Shared post-checkout hook — IMPLEMENTATION-PLAN.md D1.
+# Shared post-checkout hook (see docs/workspace-tooling.md).
 #
-# One file for every in-scope repo, referenced via an ABSOLUTE
-# `core.hooksPath` (G2) so nothing needs to be committed to any repo and
-# every linked worktree inherits it automatically. Wired per-repo by
-# `uv run ayon-sdd link` (D2); this file itself is never modified per-repo.
+# One file for every linked repo, referenced via an ABSOLUTE
+# `core.hooksPath` so nothing needs to be committed to any repo and every
+# linked worktree inherits it automatically. Wired per-repo by
+# `uv run ayon-workspace link`; this file itself is never modified per-repo.
 #
 # This hook does exactly one thing: detect that a brand-new linked worktree
-# was just created (G1), then shell out to `ayon-sdd worktree-setup` — the
-# single implementation shared with the Zed `create_worktree` task (D4). Do
-# not add any setup logic here; add it to `worktree_setup.py` instead.
+# was just created, then shell out to `ayon-workspace worktree-setup` — the
+# single implementation shared with the Zed `create_worktree` task. Do not
+# add any setup logic here; add it to `workspace_worktree_setup.py` instead.
 
 # 0. Self-correct the executable bit. Git silently skips a hook that isn't
 # executable, and this file is shared (not per-repo), so it's worth
@@ -22,7 +22,7 @@ fi
 PREV_HEAD="$1"
 IS_BRANCH_CHECKOUT="$3"
 
-# 2. Only act on "a brand new linked worktree was just created" (G1):
+# 2. Only act on "a brand new linked worktree was just created":
 # previous HEAD is all zeros, this is a branch checkout, and the current
 # git-dir differs from the common git-dir (the reliable "linked worktree,
 # not the main one" test).
@@ -47,7 +47,7 @@ if [ "$PREV_HEAD" = "0000000000000000000000000000000000000000" ] \
     ROOT="$(dirname "$SCRIPT_DIR")"
 
     echo "⚙️  New linked worktree detected at: $WORKTREE"
-    (cd "$ROOT" && AYON_WORKSPACE_ROOT="$ROOT" uv run ayon-sdd worktree-setup \
+    (cd "$ROOT" && AYON_WORKSPACE_ROOT="$ROOT" uv run ayon-workspace worktree-setup \
         --worktree "$WORKTREE" --main "$MAIN")
 fi
 

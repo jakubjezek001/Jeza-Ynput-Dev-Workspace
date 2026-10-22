@@ -8,14 +8,7 @@ from .remove_unused_addons import remove_unused_addons
 from .create_addon_package import create_addon_package
 from .launcher_dev_mode import launcher_dev_mode
 from .launch_ayon_app import launch_ayon_app
-from .sdd_install_global import install_global
-from .sdd_link import link, unlink
-from .sdd_status import status
-from .sdd_worktree_setup import worktree_setup
-from .sdd_init_speckit import init_speckit
-from .sdd_doctor import doctor
-from .bootstrap_workspace import bootstrap
-from .ayon_sdd import ayon_sdd
+from .ayon_workspace import ayon_workspace
 
 __all__ = [
     "docs_initialize",
@@ -28,13 +21,5 @@ __all__ = [
     "create_addon_package",
     "launcher_dev_mode",
     "launch_ayon_app",
-    "install_global",
-    "link",
-    "unlink",
-    "status",
-    "worktree_setup",
-    "init_speckit",
-    "doctor",
-    "bootstrap",
-    "ayon_sdd",
+    "ayon_workspace",
 ]

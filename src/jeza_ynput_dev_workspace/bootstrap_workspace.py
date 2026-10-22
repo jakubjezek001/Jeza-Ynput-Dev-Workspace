@@ -1,32 +1,27 @@
 #!/usr/bin/env python
 
-"""Bootstrap a brand-new workspace root from scratch — Phase G (G0/G3).
+"""Bootstrap a brand-new workspace root from scratch.
 
 This is the single command a brand-new, empty workspace folder needs to
-reach the full A-F state: ``uv run ayon-sdd bootstrap``. It never
-reimplements any of the individual phases — it only sequences the existing,
-already-idempotent building blocks (G2):
+reach a working state: ``uv run ayon-workspace bootstrap``. It never
+reimplements any of the individual steps — it only sequences the existing,
+already-idempotent building blocks:
 
 1. Preflight — assert ``git``/``uv`` are on ``PATH`` (hard requirement);
-   warn, don't fail, if ``zed``/``goose`` are missing (L0 is still writable).
+   warn, don't fail, if ``zed`` is missing (the global tasks are still
+   writable).
 2. Resolve ``<NEW_ROOT>`` (``--root``, else ``$AYON_WORKSPACE_ROOT``, else
    cwd); refuse to run against ``$HOME`` or ``/``.
-3. Clone the in-scope repos (§6 D6 — the default ten, or ``--all`` for the
-   full ~40) via ``git_clone_all_repos.clone_repos`` — reused, not
-   reimplemented (G2). Freshly-cloned §6 D1 repos are put on their target
-   branch immediately (``sdd_common.ensure_branch``) — safe only because
-   they did not exist a moment ago.
-4. ``install-global`` — the L0 layer (Phase A).
-5. Clone/locate the L1 central repo (``ayon-agentic-instructions``).
-6. ``link --all`` — the L2 layer (Phase D2).
-7. ``init-speckit`` for the seven §6 D1 repos present on disk.
-8. ``doctor`` — fail loudly with a per-check report if anything is off.
+3. Clone the default repos (or ``--all`` for the full ~40) via
+   ``git_clone_all_repos.clone_repos`` — reused, not reimplemented.
+4. ``install-global`` — the global Zed tasks.
+5. ``link`` every in-scope repo on disk (``.zed`` symlink + shared hook).
+6. ``doctor`` — fail loudly with a per-check report if anything is off.
 
-Every step honours ``--dry-run``; the whole command is idempotent (D5).
+Every step honours ``--dry-run``; the whole command is idempotent.
 
 Script usage:
-  uv run ayon-sdd bootstrap [--root PATH] [--dry-run] [--skip-clone] [--all]
-  uv run ayon-workspace-bootstrap [--root PATH] [--dry-run] [--skip-clone]
+  uv run ayon-workspace bootstrap [--root PATH] [--dry-run] [--skip-clone]
       [--all]
 """
 
@@ -39,23 +34,15 @@ from pathlib import Path
 import click
 
 from .git_clone_all_repos import ALL_REPOS, clone_repos
-from .sdd_common import (
-    BRANCH_TABLE,
-    CENTRAL_REPO,
-    CENTRAL_REPO_BRANCH,
-    DEFAULT_CLONE_REPOS,
-    SCOPE_REPOS,
-    ensure_branch,
-)
-from .sdd_doctor import run_doctor
-from .sdd_init_speckit import init_speckit_one
-from .sdd_install_global import install_global
-from .sdd_link import link_one
+from .workspace_common import DEFAULT_CLONE_REPOS, SCOPE_REPOS
+from .workspace_doctor import run_doctor
+from .workspace_install_global import install_global
+from .workspace_link import link_one
 
 # Tools this command needs; "hard" ones abort bootstrap if missing, "soft"
-# ones only produce a warning (L0 is still writable without zed/goose).
+# ones only produce a warning (the global tasks are still writable).
 HARD_REQUIREMENTS = ["git", "uv"]
-SOFT_REQUIREMENTS = ["zed", "goose"]
+SOFT_REQUIREMENTS = ["zed"]
 
 
 def _tool_version(tool: str) -> str:
@@ -75,7 +62,7 @@ def _tool_version(tool: str) -> str:
 
 
 def _preflight(log: logging.Logger) -> None:
-    """Assert hard requirements, warn on missing soft ones (G3 step 1).
+    """Assert hard requirements, warn on missing soft ones.
 
     Args:
         log (logging.Logger): logger to report progress on.
@@ -93,15 +80,15 @@ def _preflight(log: logging.Logger) -> None:
     for tool in SOFT_REQUIREMENTS:
         if shutil.which(tool) is None:
             log.warning(
-                f"'{tool}' is not on PATH — L0 will still be written, but "
-                f"{tool}-dependent steps will be skipped or limited."
+                f"'{tool}' is not on PATH — the global tasks will still "
+                f"be written, but you need {tool} to use them."
             )
         else:
             log.info(f"{tool}: {_tool_version(tool)}")
 
 
 def _resolve_new_root(root_option: str) -> Path:
-    """Resolve ``<NEW_ROOT>`` and refuse dangerous targets (G3 step 2).
+    """Resolve ``<NEW_ROOT>`` and refuse dangerous targets.
 
     Args:
         root_option (str): the ``--root`` CLI value (may be empty).
@@ -138,26 +125,24 @@ def _resolve_new_root(root_option: str) -> Path:
 @click.option(
     "--dry-run", is_flag=True, help="Print the plan without writing anything."
 )
-@click.option(
-    "--skip-clone", is_flag=True, help="Skip the repo-cloning step (G3.3)."
-)
+@click.option("--skip-clone", is_flag=True, help="Skip the repo-cloning step.")
 @click.option(
     "--all",
     "use_all",
     is_flag=True,
-    help="Clone the full ~40-repo set instead of the default in-scope ten.",
+    help="Clone the full ~40-repo set instead of the default ten.",
 )
 def bootstrap(
     root_option: str, dry_run: bool, skip_clone: bool, use_all: bool
 ) -> None:
-    """Bring a brand-new workspace root to the full A-F state (Phase G).
+    """Bring a brand-new workspace root to a working state.
 
     Args:
         root_option (str): the ``--root`` CLI value (may be empty).
         dry_run (bool): if set, print the plan without writing anything.
         skip_clone (bool): if set, skip step 3 (cloning repos).
-        use_all (bool): if set, clone the full ~40-repo set (§6 D6) instead
-            of the default in-scope ten.
+        use_all (bool): if set, clone the full ~40-repo set instead of
+            the default ten.
     """
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     log = logging.getLogger("bootstrap")
@@ -171,37 +156,22 @@ def bootstrap(
         root.mkdir(parents=True, exist_ok=True)
 
     # Every downstream subcommand resolves <ROOT> from this override
-    # (sdd_common.resolve_workspace_root / sdd_install_global's own
-    # resolver) — set once here so bootstrap can target a root other than
-    # its own installed location (the Zed-task case, G4).
+    # (workspace_common.resolve_workspace_root) — set once here so bootstrap
+    # can target a root other than its own installed location (the Zed-task
+    # case).
     os.environ["AYON_WORKSPACE_ROOT"] = str(root)
 
     log.info("=== 3. Clone repos ===")
-    newly_cloned = []
     if skip_clone:
         log.info("--skip-clone set, not cloning anything")
     else:
         target_list = ALL_REPOS if use_all else DEFAULT_CLONE_REPOS
-        newly_cloned = clone_repos(root, target_list, dry_run=dry_run)
-        for name in newly_cloned:
-            branch = BRANCH_TABLE.get(name)
-            if branch:
-                ensure_branch(root / name, branch, dry_run, log)
+        clone_repos(root, target_list, dry_run=dry_run)
 
-    log.info("=== 4. Install global (L0) layer ===")
+    log.info("=== 4. Install global Zed tasks ===")
     install_global.callback(dry_run=dry_run)
 
-    log.info("=== 5. Clone/locate the L1 central repo ===")
-    if not (root / CENTRAL_REPO).is_dir():
-        central_cloned = clone_repos(root, [CENTRAL_REPO], dry_run=dry_run)
-        if central_cloned:
-            ensure_branch(
-                root / CENTRAL_REPO, CENTRAL_REPO_BRANCH, dry_run, log
-            )
-    else:
-        log.info(f"{CENTRAL_REPO}: already present")
-
-    log.info("=== 6. Link (L2) layer ===")
+    log.info("=== 5. Link repos ===")
     for name in SCOPE_REPOS:
         repo = root / name
         if repo.is_dir():
@@ -209,17 +179,9 @@ def bootstrap(
         else:
             log.info(f"{name}: not on disk, skipping link")
 
-    log.info("=== 7. Init Spec Kit (C2) for the §6 D1 repos ===")
-    for name in SCOPE_REPOS:
-        repo = root / name
-        if repo.is_dir():
-            init_speckit_one(repo, dry_run, log)
-        else:
-            log.info(f"{name}: not on disk, skipping init-speckit")
-
-    log.info("=== 8. Doctor ===")
+    log.info("=== 6. Doctor ===")
     if dry_run:
-        log.info("[dry-run] would run `ayon-sdd doctor`")
+        log.info("[dry-run] would run `ayon-workspace doctor`")
         return
 
     problems = run_doctor(root, log)

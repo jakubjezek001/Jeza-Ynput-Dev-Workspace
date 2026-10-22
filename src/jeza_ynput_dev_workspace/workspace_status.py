@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
-"""Report L2 linkage drift across the in-scope repos — Phase D5 ``status``.
+"""Report workspace linkage drift across repos — ``status``.
 
-Checks, for each repo, exactly what ``ayon-sdd link`` is supposed to have set
-up: an absolute ``core.hooksPath`` (G2), the ``.agents-main``/``.zed``
-symlinks resolving to the expected targets, and both hidden from
-``git status`` via ``.git/info/exclude`` (G4) — all read-only, this
-subcommand never writes anything.
+Checks, for each repo, exactly what ``ayon-workspace link`` is supposed to
+have set up: an absolute ``core.hooksPath``, the ``.zed`` symlink resolving
+to the expected target, and hidden from ``git status`` via
+``.git/info/exclude`` — all read-only, this subcommand never writes
+anything.
 
 Script usage:
-  uv run ayon-sdd status [--repo PATH ...] [--all]
+  uv run ayon-workspace status [--repo PATH ...] [--all]
 """
 
 import logging
@@ -18,15 +18,14 @@ from pathlib import Path
 
 import click
 
-from .sdd_common import (
+from .workspace_common import (
     is_tracked,
     resolve_target_repos,
     resolve_workspace_root,
 )
 
-# Mirrors sdd_link.LINKS (kept in sync there; duplicated as a plain mapping
-# here would drift, so this module imports it directly).
-from .sdd_link import LINKS
+# Imported rather than duplicated, so ``link`` and ``status`` never drift.
+from .workspace_link import LINKS
 
 
 def _check_hooks_path(repo: Path, root: Path) -> str:
@@ -42,7 +41,7 @@ def _check_hooks_path(repo: Path, root: Path) -> str:
     if configured != str(expected):
         return (
             f"core.hooksPath is '{configured or '(unset)'}', expected "
-            f"'{expected}' (absolute, G2)"
+            f"'{expected}' (absolute)"
         )
     return ""
 
@@ -82,7 +81,7 @@ def _check_link(
         check=False,
     )
     if check_ignore.returncode != 0:
-        return f"{name} resolves but is not check-ignore'd (G4/G5)"
+        return f"{name} resolves but is not check-ignore'd"
     return ""
 
 
@@ -123,7 +122,7 @@ def check_repo(repo: Path, root: Path, log: logging.Logger) -> list:
     "--all", "use_all", is_flag=True, help="Check every repo in SCOPE_REPOS."
 )
 def status(repos: tuple, use_all: bool) -> None:
-    """Print L2 linkage status for the given (or all) repos.
+    """Print workspace linkage status for the given (or all) repos.
 
     Args:
         repos (tuple): explicit ``--repo`` paths to check.

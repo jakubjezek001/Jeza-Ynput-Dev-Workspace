@@ -3,10 +3,9 @@ import subprocess
 from pathlib import Path
 from typing import List, Union
 
-# List of repositories to clone, organized by category. Moved to a module
-# constant (Phase G, G2) so ``--all`` (the full ~40-repo set, §6 D6) and the
-# existing ``git_clone_all_repos()`` entry point share one definition instead
-# of drifting copies.
+# List of repositories to clone, organized by category. A module constant
+# so ``ayon-workspace bootstrap --all`` and the ``git_clone_all_repos()``
+# entry point share one definition instead of drifting copies.
 ALL_REPOS: List[str] = [
     # Core repositories
     "ayon-docker",
@@ -72,16 +71,9 @@ def clone_repos(
     """Clone ``repos`` into ``target_dir`` without changing directory.
 
     This is the reusable primitive behind both ``git_clone_all_repos()``
-    (unchanged behaviour, full ``ALL_REPOS`` list) and
-    ``ayon-sdd bootstrap`` (Phase G, G2), which needs an explicit repo list
-    and target path and must never call ``os.chdir`` globally.
-
-    Always clones the default branch — a §6 D1 repo's target branch does
-    not necessarily exist on ``origin`` yet (verified true for 5 of the 7
-    repos, 2026-09-03), so ``git clone -b <branch>`` would fail outright.
-    ``ayon-sdd bootstrap`` instead calls ``sdd_common.ensure_branch`` after
-    cloning, which correctly handles both cases (track the branch if it
-    exists on ``origin``, otherwise create it fresh).
+    (full ``ALL_REPOS`` list) and ``ayon-workspace bootstrap``, which needs
+    an explicit repo list and target path and must never call ``os.chdir``
+    globally. Always clones the default branch.
 
     Args:
         target_dir (Union[str, Path]): directory repos are cloned into;
@@ -92,9 +84,7 @@ def clone_repos(
 
     Returns:
         List[str]: names of repos that were newly cloned in this call
-            (excludes repos that already existed on disk) — used by
-            ``bootstrap`` to know which repos it may safely put on a
-            specific branch (G2/§6 D1).
+            (excludes repos that already existed on disk).
 
     Raises:
         FileNotFoundError: if a ``git clone`` invocation fails.

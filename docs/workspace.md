@@ -1,0 +1,56 @@
+# Workspace
+
+This repository (`jakubjezek001/Jeza-Ynput-Dev-Workspace`) is a personal
+wrapper around a multi-repo AYON workspace. It is not part of the AYON
+project itself. Its owner, Jakub Ježek, works across the AYON pipeline
+(`github.com/ynput`), mainly on host-app addons (Nuke, Flame, Resolve,
+Hiero) and on workspace tooling.
+
+What is tracked here: workspace tooling, editor config and these docs. The
+`ayon-*` folders next to them are independent clones of `github.com/ynput`
+repositories and are gitignored.
+
+## Layout
+
+| Path | What it is | Tracked here |
+| --- | --- | --- |
+| `src/jeza_ynput_dev_workspace/` | Workspace tooling, run as `uv run <entry-point>` ([workspace-tooling.md](workspace-tooling.md)) | yes |
+| `pyproject.toml`, `ruff.toml` | Tool dependencies, entry points, style for `src/` | yes |
+| `.zed/` | Workspace Zed tasks, settings, debug config | yes |
+| `.githooks-shared/` | Shared `post-checkout` hook for linked repos | yes |
+| `docs/` | Agent and developer instructions | yes |
+| `ayon-*/`, `pytest-ayon/`, `OpenPype-premium/` | Independent repositories, each with its own git history | no |
+| `worktrees/<repo>/<branch>/` | Linked git worktrees for parallel work | no |
+| `__TESTs/`, `__CLIENTS_WORK/` | Personal test data, client material | no |
+| `.env`, `.env.*` | Local secrets and settings for the tools | no |
+
+## Guardrails
+
+- Each `ayon-*` folder is its own repository. Work in it as that repo, on
+  its own branch, with its own config. Never commit its content to this
+  repository.
+- `ayon-backend`, `ayon-frontend` and `ayon-docker` are the server stack:
+  read-only local infrastructure. Never edit or commit to them. The only
+  exception is `ayon-docker/addons/`, which is runtime data that the
+  workspace tools manage.
+- Do not touch `__TESTs/`, `__CLIENTS_WORK/`, `.venv/`, `.env*`, `uv.lock`
+  or the `worktrees/` folders unless asked.
+- `__CLIENTS_WORK/` and private repositories (for example
+  `OpenPype-premium`, `ayon-premium-*`) are confidential. Never carry their
+  content into another repository or a public artifact
+  ([constitution Article 9](ayon/constitution.md#article-9--private-repositories-are-non-referenceable)).
+- Never print or commit values from `.env`.
+- Read economically: start from the tree, `api/` and `__init__.py` files
+  and docstrings; go deeper only when that is not enough.
+
+## Environment
+
+The tools read `.env` at the workspace root (via `python-dotenv`):
+
+| Variable | Used by |
+| --- | --- |
+| `AYON_SERVER_URL` | all server tools |
+| `AYON_API_KEY` | `upload-to-addon-folder`, `remove-unused-addons` (needs a service user) |
+| `AYON_USE_DEV`, `PYTHON_EXECUTABLE` | `ayon-launch-app`, `launcher-dev-mode` |
+| `AYON_STUDIO_BUNDLE_NAME`, `AYON_DEBUG` | `launcher-dev-mode` |
+| `AYON_WORKSPACE_ROOT` | optional override of the workspace root; the global Zed tasks and `ayon-workspace` use it |

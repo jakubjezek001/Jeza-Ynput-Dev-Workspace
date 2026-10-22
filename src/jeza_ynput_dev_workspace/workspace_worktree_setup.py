@@ -1,30 +1,29 @@
 #!/usr/bin/env python
 
-"""Set up a freshly created linked worktree — Phase D1/D4 shared logic.
+"""Set up a freshly created linked worktree — shared logic.
 
-This is the **single implementation** invoked by both distribution paths a
-worktree can be created through:
+This is the **single implementation** invoked by both paths a worktree can
+be created through:
 
 - the shared ``post-checkout`` git hook
   (``<ROOT>/.githooks-shared/post-checkout``, wired per-repo via
-  ``core.hooksPath`` — D1/D2), for ``git worktree add``.
-- the global Zed ``create_worktree`` task (``~/.config/zed/tasks.json`` — D4),
+  ``core.hooksPath``), for ``git worktree add``.
+- the global Zed ``create_worktree`` task (``~/.config/zed/tasks.json``),
   for worktrees created through Zed's worktree picker.
 
 Both call
-``uv run ayon-sdd worktree-setup --worktree <new> --main <repo-main>``
-instead of duplicating any of this logic (IMPLEMENTATION-PLAN.md D5: *"Do not
-let post-checkout and the create_worktree task grow independent copies of the
-same logic"*).
+``uv run ayon-workspace worktree-setup --worktree <new> --main <repo-main>``
+instead of duplicating any of this logic — do not let the hook and the Zed
+task grow independent copies of it.
 
-Unlike ``ayon-sdd link`` (same-directory siblings under ``<ROOT>``, so
+Unlike ``ayon-workspace link`` (same-directory siblings under ``<ROOT>``, so
 relative symlinks work), a linked worktree can live at any depth relative to
 ``<ROOT>`` (e.g. ``ayon-nuke.worktrees/<branch>/``), so this module always
 uses **absolute** symlink targets, resolved from ``<ROOT>`` (never a
-hardcoded path — see ``sdd_common.resolve_workspace_root``).
+hardcoded path — see ``workspace_common.resolve_workspace_root``).
 
 Script usage:
-  uv run ayon-sdd worktree-setup --worktree PATH --main PATH [--dry-run]
+  uv run ayon-workspace worktree-setup --worktree PATH --main PATH [--dry-run]
 """
 
 import logging
@@ -33,7 +32,7 @@ from pathlib import Path
 
 import click
 
-from .sdd_common import CENTRAL_REPO, resolve_workspace_root
+from .workspace_common import resolve_workspace_root
 
 
 def _relink_absolute(
@@ -89,7 +88,9 @@ def _copy_env(
     dry_run: bool,
     log: logging.Logger,
 ) -> None:
-    """Copy ``.env`` from the repo's main worktree if missing here (G3).
+    """Copy ``.env`` from the repo's main worktree if missing here.
+
+    ``git worktree add`` never copies untracked or ignored files.
 
     Args:
         main (Path): the repo's main worktree (has the real ``.env``).
@@ -132,12 +133,12 @@ def _copy_env(
     help="Print the planned changes without writing anything.",
 )
 def worktree_setup(worktree: str, main_worktree: str, dry_run: bool) -> None:
-    """Wire a freshly created linked worktree into the L2 shared layer.
+    """Wire a freshly created linked worktree into the workspace linkage.
 
     Called only by the shared post-checkout hook and the Zed
     ``create_worktree`` task — never invoked directly by a person. Any
     unexpected problem is logged, not raised, so this command never fails a
-    checkout (D1 rule 5: "never fail the checkout").
+    checkout.
 
     Args:
         worktree (str): path to the new linked worktree.
@@ -152,12 +153,9 @@ def worktree_setup(worktree: str, main_worktree: str, dry_run: bool) -> None:
         worktree_path = Path(worktree).resolve()
         main_path = Path(main_worktree).resolve()
 
-        _relink_absolute(
-            worktree_path / ".agents-main", root / CENTRAL_REPO, dry_run, log
-        )
         _relink_absolute(worktree_path / ".zed", root / ".zed", dry_run, log)
         _copy_env(main_path, worktree_path, dry_run, log)
-    except Exception as exc:  # noqa: BLE001 - never fail the checkout (D1 rule 5)
+    except Exception as exc:  # noqa: BLE001 - never fail the checkout
         log.warning(f"worktree-setup hit a problem, continuing anyway: {exc}")
     else:
         log.info(
