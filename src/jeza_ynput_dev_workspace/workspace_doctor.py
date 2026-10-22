@@ -7,7 +7,8 @@ Read-only — ``doctor`` never writes anything, and is also the final step of
 
 Checks:
 
-- ``~/.config/zed/tasks.json`` exists and parses as JSON.
+- ``<ROOT>/.zed/tasks.json`` (the canonical Zed task file) exists and
+  parses as JSON.
 - Per in-scope repo present on disk: the linkage is clean (reuses
   ``workspace_status.check_repo`` — one definition, no drift between
   ``status`` and ``doctor``).
@@ -27,11 +28,11 @@ from .workspace_common import SCOPE_REPOS, resolve_workspace_root
 from .workspace_status import check_repo
 
 
-def _check_global_tasks_json(log: logging.Logger) -> List[str]:
-    """Return drift messages for ``~/.config/zed/tasks.json``."""
-    path = Path.home() / ".config" / "zed" / "tasks.json"
+def _check_workspace_tasks_json(root: Path, log: logging.Logger) -> List[str]:
+    """Return drift messages for the canonical workspace task file."""
+    path = root / ".zed" / "tasks.json"
     if not path.is_file():
-        return [f"{path} is missing — run `ayon-workspace install-global`"]
+        return [f"{path} is missing — restore the workspace task file"]
     try:
         json.loads(path.read_text())
     except (json.JSONDecodeError, OSError) as exc:
@@ -67,7 +68,7 @@ def run_doctor(root: Path, log: logging.Logger) -> List[str]:
         List[str]: human-readable problem descriptions; empty means clean.
     """
     problems: List[str] = []
-    problems += _check_global_tasks_json(log)
+    problems += _check_workspace_tasks_json(root, log)
     problems += _check_repo_linkage(root, log)
     return problems
 

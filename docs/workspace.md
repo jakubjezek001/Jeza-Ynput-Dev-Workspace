@@ -53,4 +53,4 @@ The tools read `.env` at the workspace root (via `python-dotenv`):
 | `AYON_API_KEY` | `upload-to-addon-folder`, `remove-unused-addons` (needs a service user) |
 | `AYON_USE_DEV`, `PYTHON_EXECUTABLE` | `ayon-launch-app`, `launcher-dev-mode` |
 | `AYON_STUDIO_BUNDLE_NAME`, `AYON_DEBUG` | `launcher-dev-mode` |
-| `AYON_WORKSPACE_ROOT` | optional override of the workspace root; the global Zed tasks and `ayon-workspace` use it |
+| `AYON_WORKSPACE_ROOT` | the workspace root; required by the Zed tasks (set it where Zed starts, see [workspace-tooling.md](workspace-tooling.md#zed-tasks)), optional override for `ayon-workspace` and the scripts |

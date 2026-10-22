@@ -13,17 +13,28 @@ from pathlib import Path
 
 import click
 
-# The repos ``--all`` wires with the workspace linkage (``.zed`` symlink and
-# the shared ``post-checkout`` hook). Any other repo can still be linked
-# explicitly with ``--repo PATH``.
+# The repos ``--all`` wires with the workspace linkage (``.zed/tasks.json``
+# symlink and the shared ``post-checkout`` hook). Any other repo can still be
+# linked explicitly with ``--repo PATH``.
 SCOPE_REPOS = [
-    "ayon-batch-delivery",
-    "ayon-flame",
-    "ayon-resolve",
-    "ayon-hiero",
     "ayon-core",
     "ayon-launcher",
+    "ayon-traypublisher",
+    "ayon-batch-delivery",
+    "ayon-batch-ingest",
+    "ayon-hiero",
+    "ayon-resolve",
+    "ayon-flame",
     "ayon-nuke",
+    "ayon-maya",
+    "ayon-deadline",
+    "ayon-slater",
+    "ayon-tvpaint",
+    "ayon-harmony",
+    "ayon-photoshop",
+    "ayon-ftrack",
+    "ayon-shotgrid",
+    "ayon-openrv",
 ]
 
 # Server repos that are needed on disk as read-only local infra but must

@@ -8,7 +8,7 @@ be created through:
 - the shared ``post-checkout`` git hook
   (``<ROOT>/.githooks-shared/post-checkout``, wired per-repo via
   ``core.hooksPath``), for ``git worktree add``.
-- the global Zed ``create_worktree`` task (``~/.config/zed/tasks.json``),
+- the workspace Zed ``create_worktree`` task (``<ROOT>/.zed/tasks.json``),
   for worktrees created through Zed's worktree picker.
 
 Both call
@@ -18,9 +18,11 @@ task grow independent copies of it.
 
 Unlike ``ayon-workspace link`` (same-directory siblings under ``<ROOT>``, so
 relative symlinks work), a linked worktree can live at any depth relative to
-``<ROOT>`` (e.g. ``ayon-nuke.worktrees/<branch>/``), so this module always
-uses **absolute** symlink targets, resolved from ``<ROOT>`` (never a
-hardcoded path — see ``workspace_common.resolve_workspace_root``).
+``<ROOT>`` (e.g. ``worktrees/ayon-nuke/<name>/ayon-nuke/``), so this
+module uses an **absolute** target for ``.zed/tasks.json``, resolved from
+``<ROOT>`` (never a hardcoded path — see
+``workspace_common.resolve_workspace_root``). Repository-local Zed settings
+and debug files are not replaced.
 
 Script usage:
   uv run ayon-workspace worktree-setup --worktree PATH --main PATH [--dry-run]
@@ -47,7 +49,8 @@ def _relink_absolute(
     ``ayon-nuke/.zed`` case ported to the worktree context); refuses to
     touch a non-empty real directory or file, to avoid silent data loss —
     this subcommand only ever runs against brand-new worktrees, so it never
-    needs a ``--force`` escape hatch.
+    needs a ``--force`` escape hatch. Missing parent directories (e.g. a
+    brand-new worktree that has no ``.zed/`` at all) are created as needed.
 
     Args:
         link_path (Path): path (inside the new worktree) to symlink.
@@ -78,6 +81,7 @@ def _relink_absolute(
     if dry_run:
         log.info(f"[dry-run] would symlink {link_path} -> {target}")
         return
+    link_path.parent.mkdir(parents=True, exist_ok=True)
     link_path.symlink_to(target)
     log.info(f"Symlinked {link_path} -> {target}")
 
@@ -90,7 +94,8 @@ def _copy_env(
 ) -> None:
     """Copy ``.env`` from the repo's main worktree if missing here.
 
-    ``git worktree add`` never copies untracked or ignored files.
+    ``git worktree add`` never copies untracked or ignored files. Also
+    copies ``service_tools/.env`` the same way, if present.
 
     Args:
         main (Path): the repo's main worktree (has the real ``.env``).
@@ -98,19 +103,23 @@ def _copy_env(
         dry_run (bool): if set, only log the planned change.
         log (logging.Logger): logger to report progress on.
     """
-    src = main / ".env"
-    dst = worktree / ".env"
-    if not src.exists():
-        log.info("No .env in main worktree, nothing to copy")
-        return
-    if dst.exists():
-        log.info(".env already present in new worktree, not overwriting")
-        return
-    if dry_run:
-        log.info(f"[dry-run] would copy {src} -> {dst}")
-        return
-    shutil.copy2(src, dst)
-    log.info(f"Copied {src} -> {dst}")
+    for rel in (Path(".env"), Path("service_tools") / ".env"):
+        src = main / rel
+        dst = worktree / rel
+        if not src.exists():
+            log.info("No %s in main worktree, nothing to copy", rel)
+            continue
+        if dst.exists():
+            log.info(
+                "%s already present in new worktree, not overwriting", rel
+            )
+            continue
+        if dry_run:
+            log.info("[dry-run] would copy %s -> %s", src, dst)
+            continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+        log.info("Copied %s -> %s", src, dst)
 
 
 @click.command(name="worktree-setup")
@@ -153,7 +162,22 @@ def worktree_setup(worktree: str, main_worktree: str, dry_run: bool) -> None:
         worktree_path = Path(worktree).resolve()
         main_path = Path(main_worktree).resolve()
 
-        _relink_absolute(worktree_path / ".zed", root / ".zed", dry_run, log)
+        legacy_zed = worktree_path / ".zed"
+        if (
+            legacy_zed.is_symlink()
+            and legacy_zed.resolve() == (root / ".zed").resolve()
+        ):
+            if dry_run:
+                log.info(f"[dry-run] would replace legacy {legacy_zed} link")
+            else:
+                legacy_zed.unlink()
+                log.info(f"Replaced legacy {legacy_zed} directory link")
+        _relink_absolute(
+            worktree_path / ".zed" / "tasks.json",
+            root / ".zed" / "tasks.json",
+            dry_run,
+            log,
+        )
         _copy_env(main_path, worktree_path, dry_run, log)
     except Exception as exc:  # noqa: BLE001 - never fail the checkout
         log.warning(f"worktree-setup hit a problem, continuing anyway: {exc}")

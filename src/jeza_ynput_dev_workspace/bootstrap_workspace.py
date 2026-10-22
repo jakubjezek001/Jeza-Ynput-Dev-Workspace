@@ -8,15 +8,15 @@ reimplements any of the individual steps — it only sequences the existing,
 already-idempotent building blocks:
 
 1. Preflight — assert ``git``/``uv`` are on ``PATH`` (hard requirement);
-   warn, don't fail, if ``zed`` is missing (the global tasks are still
-   writable).
+   warn, don't fail, if ``zed`` is missing (the tasks need it, the setup
+   does not).
 2. Resolve ``<NEW_ROOT>`` (``--root``, else ``$AYON_WORKSPACE_ROOT``, else
    cwd); refuse to run against ``$HOME`` or ``/``.
 3. Clone the default repos (or ``--all`` for the full ~40) via
    ``git_clone_all_repos.clone_repos`` — reused, not reimplemented.
-4. ``install-global`` — the global Zed tasks.
-5. ``link`` every in-scope repo on disk (``.zed`` symlink + shared hook).
-6. ``doctor`` — fail loudly with a per-check report if anything is off.
+4. ``link`` every in-scope repo on disk (``.zed/tasks.json`` symlink +
+   shared hook).
+5. ``doctor`` — fail loudly with a per-check report if anything is off.
 
 Every step honours ``--dry-run``; the whole command is idempotent.
 
@@ -36,11 +36,10 @@ import click
 from .git_clone_all_repos import ALL_REPOS, clone_repos
 from .workspace_common import DEFAULT_CLONE_REPOS, SCOPE_REPOS
 from .workspace_doctor import run_doctor
-from .workspace_install_global import install_global
 from .workspace_link import link_one
 
 # Tools this command needs; "hard" ones abort bootstrap if missing, "soft"
-# ones only produce a warning (the global tasks are still writable).
+# ones only produce a warning (the setup works without them).
 HARD_REQUIREMENTS = ["git", "uv"]
 SOFT_REQUIREMENTS = ["zed"]
 
@@ -80,8 +79,8 @@ def _preflight(log: logging.Logger) -> None:
     for tool in SOFT_REQUIREMENTS:
         if shutil.which(tool) is None:
             log.warning(
-                f"'{tool}' is not on PATH — the global tasks will still "
-                f"be written, but you need {tool} to use them."
+                f"'{tool}' is not on PATH — the workspace is still set "
+                f"up, but you need {tool} to use its tasks."
             )
         else:
             log.info(f"{tool}: {_tool_version(tool)}")
@@ -168,10 +167,7 @@ def bootstrap(
         target_list = ALL_REPOS if use_all else DEFAULT_CLONE_REPOS
         clone_repos(root, target_list, dry_run=dry_run)
 
-    log.info("=== 4. Install global Zed tasks ===")
-    install_global.callback(dry_run=dry_run)
-
-    log.info("=== 5. Link repos ===")
+    log.info("=== 4. Link repos ===")
     for name in SCOPE_REPOS:
         repo = root / name
         if repo.is_dir():
@@ -179,7 +175,7 @@ def bootstrap(
         else:
             log.info(f"{name}: not on disk, skipping link")
 
-    log.info("=== 6. Doctor ===")
+    log.info("=== 5. Doctor ===")
     if dry_run:
         log.info("[dry-run] would run `ayon-workspace doctor`")
         return

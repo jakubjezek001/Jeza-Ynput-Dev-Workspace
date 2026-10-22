@@ -3,8 +3,8 @@
 """Report workspace linkage drift across repos — ``status``.
 
 Checks, for each repo, exactly what ``ayon-workspace link`` is supposed to
-have set up: an absolute ``core.hooksPath``, the ``.zed`` symlink resolving
-to the expected target, and hidden from ``git status`` via
+have set up: an absolute ``core.hooksPath``, the ``.zed/tasks.json``
+symlink resolving to the expected target, and hidden from ``git status`` via
 ``.git/info/exclude`` — all read-only, this subcommand never writes
 anything.
 
@@ -53,7 +53,8 @@ def _check_link(
 
     Args:
         repo (Path): repository being checked.
-        name (str): the symlink's name inside the repo, e.g. ``.zed``.
+        name (str): the symlink's name inside the repo, e.g.
+            ``.zed/tasks.json``.
         relative_target (str): expected symlink target (from ``LINKS``).
         log (logging.Logger): logger for informational (non-drift) notes.
 
