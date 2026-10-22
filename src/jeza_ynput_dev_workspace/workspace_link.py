@@ -3,16 +3,16 @@
 """Wire (and unwire) a repo into the workspace linkage.
 
 Idempotently sets each repo's ``core.hooksPath`` to the shared, absolute
-hooks directory (``<ROOT>/.githooks-shared``), symlinks ``.zed`` to the
-shared workspace project config so the workspace Zed tasks are available
-inside the repo, and hides the symlink from ``git status`` via
-``.git/info/exclude`` — without ever touching a repo's committed
-``.gitignore``, and without a trailing slash on the symlink entry (or the
-symlink itself is not recognised as ignored).
+hooks directory (``<ROOT>/.githooks-shared``), symlinks only
+``.zed/tasks.json`` to the canonical workspace task file so the workspace
+Zed tasks are available inside the repo, and hides the symlink from
+``git status`` via ``.git/info/exclude`` — without ever touching a repo's
+committed ``.gitignore``. Repository-owned ``.zed/settings.json`` and
+``.zed/debug.json`` files are left alone.
 
-The symlink uses a **relative** target (``../.zed``) because every repo
-in scope is a direct sibling of ``<ROOT>``. Linked *worktrees* of these
-repos live at a different depth, so ``ayon-workspace worktree-setup``
+The symlink uses a **relative** target (``../../.zed/tasks.json``) because
+every repo in scope is a direct sibling of ``<ROOT>``. Linked *worktrees* of
+these repos live at a different depth, so ``ayon-workspace worktree-setup``
 performs the equivalent job with an **absolute** target instead — see that
 module's docstring. Background: docs/workspace-tooling.md.
 
@@ -35,10 +35,10 @@ from .workspace_common import (
 
 # name -> relative symlink target
 LINKS = {
-    ".zed": "../.zed",
+    ".zed/tasks.json": "../../.zed/tasks.json",
 }
 
-# No trailing slash on a symlinked directory.
+# No trailing slash on symlink entries.
 EXCLUDE_ENTRIES = [f"/{name}" for name in LINKS]
 
 
@@ -161,6 +161,7 @@ def _link_one_path(
     if dry_run:
         log.info(f"[dry-run] would symlink {link_path} -> {relative_target}")
         return
+    link_path.parent.mkdir(parents=True, exist_ok=True)
     link_path.symlink_to(relative_target)
     log.info(f"Symlinked {link_path} -> {relative_target}")
 
@@ -200,7 +201,7 @@ def _update_exclude(
     Args:
         repo (Path): repository to update.
         entries (list[str]): ``.git/info/exclude`` entries (each already
-            formatted, e.g. ``/.zed``, no trailing slash).
+            formatted, e.g. ``/.zed/tasks.json``, no trailing slash).
         add (bool): if set, add entries; otherwise remove them.
         dry_run (bool): if set, only log the planned change.
         log (logging.Logger): logger to report progress on.
@@ -211,9 +212,7 @@ def _update_exclude(
     )
 
     wanted = [
-        entry
-        for entry in entries
-        if not is_tracked(repo, entry.lstrip("/"))
+        entry for entry in entries if not is_tracked(repo, entry.lstrip("/"))
     ]
 
     changed = False
@@ -253,6 +252,19 @@ def link_one(
     hooks_path = root / ".githooks-shared"
     _set_hooks_path(repo, hooks_path, dry_run, log)
 
+    # Migrate the former whole-directory .zed link without touching a real
+    # repository-owned .zed directory.
+    legacy_zed = repo / ".zed"
+    if (
+        legacy_zed.is_symlink()
+        and legacy_zed.resolve() == (root / ".zed").resolve()
+    ):
+        if dry_run:
+            log.info(f"[dry-run] would replace legacy {legacy_zed} link")
+        else:
+            legacy_zed.unlink()
+            log.info(f"Replaced legacy {legacy_zed} directory link")
+
     for name, relative_target in LINKS.items():
         link_path = repo / name
         if is_tracked(repo, name):
@@ -282,6 +294,14 @@ def unlink_one(
 
     for name, relative_target in LINKS.items():
         _unlink_one_path(repo / name, relative_target, dry_run, log)
+
+    legacy_zed = repo / ".zed"
+    if legacy_zed.is_dir() and not legacy_zed.is_symlink():
+        task_path = legacy_zed / "tasks.json"
+        if not task_path.exists() and not any(legacy_zed.iterdir()):
+            if not dry_run:
+                legacy_zed.rmdir()
+            log.info(f"Removed empty {legacy_zed}")
 
     _update_exclude(repo, EXCLUDE_ENTRIES, add=False, dry_run=dry_run, log=log)
 

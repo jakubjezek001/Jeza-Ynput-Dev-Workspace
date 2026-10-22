@@ -3,6 +3,8 @@ import subprocess
 from pathlib import Path
 from typing import List, Union
 
+from .workspace_common import resolve_workspace_root
+
 # List of repositories to clone, organized by category. A module constant
 # so ``ayon-workspace bootstrap --all`` and the ``git_clone_all_repos()``
 # entry point share one definition instead of drifting copies.
@@ -20,6 +22,7 @@ ALL_REPOS: List[str] = [
     # Integration repositories
     # comp
     "ayon-nuke",
+    "ayon-maya",
     "ayon-aftereffects",
     "ayon-fusion",
     "ayon-silhouette",
@@ -60,6 +63,7 @@ ALL_REPOS: List[str] = [
     "ayon-sn4",
     "ayon-ui-qt",
     "ayon-webpublisher",
+    "ayon-mcp",
 ]
 
 
@@ -141,11 +145,13 @@ def initialize_all_clone(current_directory: Union[str, Path]) -> None:
 def git_clone_all_repos() -> None:
     """Entry point for cloning all YNPUT repositories.
 
-    This function uses the current working directory as the target location
-    for cloning repositories.
+    Repositories are cloned into the workspace root (``$AYON_WORKSPACE_ROOT``
+    if set, otherwise derived from this package's location). The current
+    working directory is deliberately not used: Zed falls back to ``/`` when
+    a task's ``cwd`` (``${AYON_WORKSPACE_ROOT}``) is unset, which made every
+    repo look missing and ``git clone`` fail on the read-only system root.
 
     Returns:
         None
     """
-    current_dir = os.getcwd()
-    initialize_all_clone(current_dir)
+    initialize_all_clone(resolve_workspace_root())

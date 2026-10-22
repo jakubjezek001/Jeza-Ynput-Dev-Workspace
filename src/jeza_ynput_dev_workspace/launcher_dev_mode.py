@@ -151,13 +151,15 @@ def launcher_dev_mode() -> None:
         0x00000010 if platform.system() == "Windows" else 0  # CREATE_NEW_CONSOLE
     )
 
-    subprocess.Popen(
+    result = subprocess.Popen(
         cmd,
         cwd=str(launcher_root),
         env=env,
         creationflags=creation_flags,
     )
 
+    result.wait()
+    log.info("Exit code: %s", result.returncode)
     log.info("\u2713 AYON Launcher started successfully!")
 
 

@@ -46,6 +46,7 @@ AVAILABLE_APPS = {
         {"name": "Nuke 16.1", "key": "nuke/16-1"},
         {"name": "Nuke 17.0", "key": "nuke/17-0"},
         {"name": "Photoshop 2026", "key": "photoshop/2026"},
+        {"name": "Silhouette", "key": "silhouette/2026-0"},
     ],
     "model": [
         {"name": "Blender", "key": "blender/4-2"},
@@ -274,13 +275,15 @@ def launch_ayon_app(addon_args: tuple) -> None:
         0x00000010 if platform.system() == "Windows" else 0  # CREATE_NEW_CONSOLE
     )
 
-    subprocess.Popen(
+    result = subprocess.Popen(
         cmd,
         cwd=str(launcher_root),
         env=env,
         creationflags=creation_flags,
     )
-
+    result.wait()
+    log.info("Exit code: %s", result.returncode)
+    log.info("\u2713 AYON Launcher started successfully!")
     log.info("\u2713 Launch initiated!")
 
 
