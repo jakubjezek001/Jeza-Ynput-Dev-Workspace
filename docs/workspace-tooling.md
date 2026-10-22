@@ -90,7 +90,7 @@ uv run ayon-workspace link   (--repo PATH ... | --all) [--dry-run]
 uv run ayon-workspace unlink (--repo PATH ... | --all) [--dry-run]
 uv run ayon-workspace status (--repo PATH ... | --all)
 uv run ayon-workspace doctor                       # read-only health check
-uv run ayon-workspace agents (list | tier TIER | sync [--check])
+uv run ayon-workspace agents (list | tier TIER | sync [--check]) [--harness NAME]
 uv run ayon-workspace bootstrap [--root PATH] [--dry-run] [--skip-clone] [--all]
 ```
 
@@ -109,10 +109,10 @@ uv run ayon-workspace bootstrap [--root PATH] [--dry-run] [--skip-clone] [--all]
   `.zed/tasks.json` with an absolute target and copies `.env` and
   `service_tools/.env` from the main checkout. It never fails a checkout.
 - `doctor` checks that `<root>/.zed/tasks.json` parses, that every
-  linked repo on disk is clean, and that the generated subagent files match
-  `config/agents/`. It exits 1 on drift.
-- `agents` lists the subagent definitions with the model their tier gets,
-  and `sync` writes the harness files from them
+  linked repo on disk is clean, and that every harness's copy of the
+  subagents matches `.agents/agents/`. It exits 1 on drift.
+- `agents` lists the subagents in `.agents/agents/` with the model their
+  tier gets on each harness, and `sync` writes each harness's copy
   ([subagents.md](subagents.md#the-pieces)).
 
 ### Why it is built this way
@@ -150,7 +150,7 @@ uv run ayon-workspace bootstrap --root "$PWD"
 
 Bootstrap clones the repos in `SCOPE_REPOS` plus the read-only server repos
 (`--all` clones the full `ALL_REPOS` list, `--skip-clone` clones nothing),
-links the repos, writes the subagent files (`agents sync`), and finishes
-with `doctor`. Every step is idempotent, so
+links the repos, writes the harness copies of the subagents
+(`agents sync`), and finishes with `doctor`. Every step is idempotent, so
 re-running it is safe. Then set `AYON_WORKSPACE_ROOT` for Zed (see
 [Zed tasks](#zed-tasks)).

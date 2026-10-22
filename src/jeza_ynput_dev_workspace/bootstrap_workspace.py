@@ -16,8 +16,8 @@ already-idempotent building blocks:
    ``git_clone_all_repos.clone_repos`` — reused, not reimplemented.
 4. ``link`` every in-scope repo on disk (``.zed/tasks.json`` symlink +
    shared hook).
-5. ``agents sync`` — write the harness's subagent files from
-   ``config/agents/`` (they are gitignored, see docs/subagents.md).
+5. ``agents sync`` — write each harness's copy of the subagents in
+   ``.agents/agents/`` (they are gitignored, see docs/subagents.md).
 6. ``doctor`` — fail loudly with a per-check report if anything is off.
 
 Every step honours ``--dry-run``; the whole command is idempotent.

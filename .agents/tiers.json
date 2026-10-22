@@ -1,15 +1,24 @@
 {
-  "provider": "claude",
+  "targets": ["claude", "cursor", "codex", "gemini", "opencode", "copilot"],
   "tiers": {
     "light": "Mechanical or narrow: search, extract, summarise given text, apply a fixed recipe.",
     "standard": "Judgement on a bounded input: write, review a small diff, decide among a few options.",
     "deep": "Open-ended reasoning: design, debugging without a lead, anything costly to get wrong."
   },
-  "providers": {
+  "harnesses": {
     "claude": {
       "light": {"model": "haiku", "effort": "low"},
       "standard": {"model": "sonnet", "effort": "medium"},
       "deep": {"model": "opus", "effort": "high"}
-    }
+    },
+    "cursor": {"light": {}, "standard": {}, "deep": {}},
+    "codex": {
+      "light": {"effort": "low"},
+      "standard": {"effort": "medium"},
+      "deep": {"effort": "high"}
+    },
+    "gemini": {"light": {}, "standard": {}, "deep": {}},
+    "opencode": {"light": {}, "standard": {}, "deep": {}},
+    "copilot": {"light": {}, "standard": {}, "deep": {}}
   }
 }

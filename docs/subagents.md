@@ -3,8 +3,10 @@
 Subagents take bounded parts of a development task (find code, collect
 impact facts, implement one piece, review a diff, write a PR description)
 so the main session stays small and cheap. Their definitions never name a
-model: they name a **tier**, and one small file maps tiers to models. To
-change cost or provider, edit that file, not the definitions.
+model: they name a **tier**, and one small file maps tiers to models per
+harness. They live in the harness-neutral `.agents/` folder; each harness
+gets a generated copy in its own format ([the pieces](#the-pieces)). To
+change cost, edit the tier map, not the definitions.
 
 ## Routing
 
@@ -64,8 +66,8 @@ redoing; say so in the plan or the PR.
   output (each definition caps its reply).
 - Fan out only independent parts, all in one message so they run in
   parallel. Two writers never touch the same file.
-- Never pass a `model` to a defined subagent: its definition carries the
-  tier.
+- Never pass a `model` to a defined subagent: its copy carries the tier's
+  model.
 - A subagent's report is a claim. Check `git -C <path> diff --stat` and run
   the repo's checks yourself before you build on it.
 - Hand over no confidential content a part does not need (`__CLIENTS_WORK/`,
@@ -74,40 +76,66 @@ redoing; say so in the plan or the PR.
 
 ## The pieces
 
+Every subagent lives once, harness-neutral, in `.agents/`. No harness
+reads subagents from a shared folder yet: each reads its own, in its own
+format. So `.agents/` is the committed source, and
+`uv run ayon-workspace agents sync` writes a copy for each harness, with
+the model the tier gets there.
+
 | What | Where |
 | --- | --- |
-| Definitions, provider-neutral | `config/agents/<name>.md`: frontmatter `name`, `description`, `tier`, `tools`, then the instructions |
-| Tier → model and thinking effort, per provider | `config/agents.json` (`provider` is the active one; defaults in `workspace_agents.py`) |
-| Harness files, generated and gitignored | `.claude/agents/<name>.md` (Claude Code), written by `uv run ayon-workspace agents sync` |
+| Definitions, the source | `.agents/agents/<name>.md`: frontmatter `name`, `description`, `tier`, `tools`, then the instructions |
+| Tier → model and effort, per harness; which harnesses get copies | `.agents/tiers.json` (`harnesses`, `targets`; defaults in `workspace_agents.py`) |
+| Harness copies, generated and gitignored | the folders below |
+
+| Harness | Reads | Copy notes |
+| --- | --- | --- |
+| Claude Code | `.claude/agents/<name>.md` | model, effort and `tools` as given |
+| Cursor | `.cursor/agents/<name>.md` | `readonly: true` when `tools` has no `Edit`/`Write` |
+| Codex | `.codex/agents/<name>.toml` | instructions as `developer_instructions`, effort as `model_reasoning_effort` |
+| Gemini CLI | `.gemini/agents/<name>.md` | tools inherited (its tool names differ) |
+| OpenCode | `.opencode/agents/<name>.md` | `mode: subagent`, `permission: edit: deny` when read-only |
+| VS Code / GitHub Copilot | `.github/agents/<name>.agent.md` | tools inherited |
+| Pydantic AI harness, pi | `.agents/agents/` itself | no copy needed; the model is inherited |
+
+A tier with no model in `.agents/tiers.json` inherits the delegating
+session's model there; only Claude Code has models filled in, Codex has
+efforts. Put a cheaper model on `light` for a harness you use to get the
+saving there. Read-only definitions say so in their instructions too,
+because not every harness enforces `tools` (Codex inherits the session's
+sandbox).
+
+A harness without file-defined subagents, or one not listed, still
+follows the [routing](#routing): it reads `.agents/agents/<name>.md` and
+hands the instructions, with the brief, to whatever delegation it has, or
+does that part itself.
 
 ```bash
-uv run ayon-workspace agents list          # each definition, its tier and model now
-uv run ayon-workspace agents tier deep     # one tier's model and effort as JSON
-uv run ayon-workspace agents sync          # write the harness files
+uv run ayon-workspace agents list          # each definition, its tier, its model per harness
+uv run ayon-workspace agents tier deep     # one tier's model and effort per harness, as JSON
+uv run ayon-workspace agents sync          # write every harness's copies
 uv run ayon-workspace agents sync --check  # exit 1 if they drifted
 ```
 
-The harness files are not committed
-([agent-instructions.md](agent-instructions.md#layout)), so each machine
-runs `sync` once; `bootstrap` does, and `doctor` reports drift. After
-editing a definition or `config/agents.json`, run `sync`. Sessions find
-these subagents when they are opened at the workspace root.
+`--harness NAME` limits any of them to one harness. The copies are not
+committed ([agent-instructions.md](agent-instructions.md#layout)), so
+each machine runs `sync` once; `bootstrap` does, and `doctor` reports
+drift. After editing a definition or `.agents/tiers.json`, run `sync`.
+Sessions find the copies when they are opened at the workspace root.
 
-## Switching provider
+## Adding a harness
 
-1. Add `providers.<name>` with a model and effort for each tier in
-   `config/agents.json`, and set `provider`.
-2. Teach `workspace_agents.py` where that provider reads agent files
-   (`OUTPUT_DIRS`, `render_definition`). Until then `sync` stops with a
-   message, and the definitions stay usable as plain prompts for any
-   harness's general-purpose agent.
-3. `uv run ayon-workspace agents sync`.
+1. Write its copy format in `workspace_agents.py` (a `_render_<name>`
+   function and its `HARNESSES` entry: folder, file name, writer).
+2. Add it to `targets` and `harnesses` in `.agents/tiers.json`, with a
+   model and effort per tier where it takes them.
+3. Gitignore its folder, then `uv run ayon-workspace agents sync`.
 
-`effort` is the provider's thinking or reasoning setting; a provider
+`effort` is the harness's thinking or reasoning setting; a harness
 without one leaves it out.
 
 ## Adding a subagent
 
-A definition in `config/agents/` with a tier, `sync`, and a row in the
+A definition in `.agents/agents/` with a tier, `sync`, and a row in the
 [routing](#routing) table. If a script can do the work, write the script
 instead.

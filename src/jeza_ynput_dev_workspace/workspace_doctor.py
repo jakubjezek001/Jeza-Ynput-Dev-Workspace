@@ -12,8 +12,8 @@ Checks:
 - Per in-scope repo present on disk: the linkage is clean (reuses
   ``workspace_status.check_repo`` — one definition, no drift between
   ``status`` and ``doctor``).
-- The generated subagent files match ``config/agents/`` (reuses
-  ``workspace_agents.check_agents``).
+- Every harness's copy of the subagents matches ``.agents/agents/``
+  (reuses ``workspace_agents.check_agents``).
 
 Script usage:
   uv run ayon-workspace doctor
