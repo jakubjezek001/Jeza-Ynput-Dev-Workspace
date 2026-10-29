@@ -25,6 +25,7 @@ SCOPE_REPOS = [
     "ayon-hiero",
     "ayon-resolve",
     "ayon-flame",
+    "ayon-editorial",
     "ayon-nuke",
     "ayon-maya",
     "ayon-deadline",
