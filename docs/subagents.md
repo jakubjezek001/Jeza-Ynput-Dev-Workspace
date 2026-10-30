@@ -34,6 +34,7 @@ the PR". Questions and read-only checks need no split.
 | Plan, open points, shared files, commits, PR title | — | you |
 | One piece with its own files, when two or more pieces have disjoint files | standard | `change-implementer`, one per piece, in parallel |
 | [Review checks](ayon/review-checks.md) before the PR | standard | `diff-reviewer` |
+| Cross-review of a new draft PR, critical, then the exchange with its author ([pull-requests.md](pull-requests.md#draft-cross-review-human-review)) | standard | a fresh `diff-reviewer`, plus one general-purpose agent for a design doubt |
 | PR title and description ([pull-requests.md](pull-requests.md)) | light | `pr-writer` |
 | A merge or rebase stopped on conflicts | standard | `conflict-resolver` |
 | A design the code and docs cannot settle | deep | one general-purpose agent on the model `uv run ayon-workspace agents tier deep` prints; say why |

@@ -110,3 +110,6 @@ list the exact ladder per repo.
 
 Before opening a PR, run the [review checks](review-checks.md). PR titles
 and descriptions follow [pull-requests.md](../pull-requests.md).
+A new PR is opened as a draft, cross-reviewed by another agent and answered by
+its author, and only then handed to the user; see
+[pull-requests.md](../pull-requests.md#draft-cross-review-human-review).

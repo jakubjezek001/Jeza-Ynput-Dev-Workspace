@@ -44,6 +44,42 @@ them ([constitution Article 8](ayon/constitution.md#article-8--the-verification-
 Never name or describe a private repository or client material in a PR
 ([Article 9](ayon/constitution.md#article-9--private-repositories-are-non-referenceable)).
 
+## Draft, cross-review, human review
+
+Every new pull request, in any repository of this workspace, follows this
+order. Nothing is skipped because the change is small.
+
+1. **Open it as a draft** (`gh pr create --draft`; a stack: every layer
+   draft). Never open a PR ready for review.
+2. **Cross-review by another agent**, right after the PR exists. The
+   reviewer is a fresh agent that did not write the change: it gets the PR
+   link, the base ref and the workspace root, never the author's
+   conclusions or a list of what to check. It is critical on purpose: it
+   looks for bugs, broken contracts, missed host differences, gaps in the
+   tests and anything the description claims but the code does not do. It
+   runs the [review checks](ayon/review-checks.md) too (`diff-reviewer`).
+   A real defect or a design doubt on a deep question goes to a
+   general-purpose agent on the deep tier
+   ([subagents.md](subagents.md#routing)).
+3. **Exchange between reviewer and author.** The reviewer posts its
+   findings on the PR (one comment per finding, `path:line`, why it is
+   wrong, a failing input where it has one). The author agent answers each
+   finding on the PR: fixed in `<commit>`, or not changed with the reason.
+   The reviewer then re-checks the answers and the new commits. Two rounds
+   at most; a finding still open after that is left for the user and named
+   in the PR description. The author verifies a finding before acting on
+   it: a reviewer's report is a claim like any subagent's.
+4. **Human review.** Only after step 3 is the user asked to review. The
+   user reads the PR with the findings and answers already on it and marks
+   it ready for review themselves.
+5. **Merge.** An agent merges a PR only when it is no longer a draft, and
+   only on the user's explicit go-ahead. A draft PR is never merged, never
+   marked ready by an agent, and its checks and approvals do not change
+   that.
+
+This applies to new PRs from now on; PRs opened before the rule keep the
+state they have.
+
 ## Updating an existing PR description
 
 1. Get the PR's diff (e.g. `gh pr diff <pr-url>`).
