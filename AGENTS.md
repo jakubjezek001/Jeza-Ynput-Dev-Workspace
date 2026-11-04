@@ -9,6 +9,10 @@ IMPORTANT: each `ayon-*` folder is its own git repository. Never commit its
 content here, and never modify `ayon-backend`, `ayon-frontend` or
 `ayon-docker`.
 
+Write every text meant for a person (chat replies, PR and issue text,
+comments, tickets) in the user's voice, following
+[docs/voice.md](docs/voice.md).
+
 Before any development work, split the task and decide who does each part
 (a script, you, or a subagent on its tier) with
 [docs/subagents.md](docs/subagents.md#routing), and state the split in one
@@ -28,5 +32,7 @@ line before you start.
 - [docs/subagents.md](docs/subagents.md) — routing work to subagents,
   tiers, `ayon-workspace agents`.
 - [docs/pull-requests.md](docs/pull-requests.md) — PR title and description.
+- [docs/voice.md](docs/voice.md) — the user's writing style, for any text
+  written in their name.
 - [docs/agent-instructions.md](docs/agent-instructions.md) — how these
   instructions are organised and how to write them.
