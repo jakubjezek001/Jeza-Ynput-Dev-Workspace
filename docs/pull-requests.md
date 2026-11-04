@@ -65,10 +65,12 @@ order. Nothing is skipped because the change is small.
    findings on the PR (one comment per finding, `path:line`, why it is
    wrong, a failing input where it has one). The author agent answers each
    finding on the PR: fixed in `<commit>`, or not changed with the reason.
-   The reviewer then re-checks the answers and the new commits. Two rounds
-   at most; a finding still open after that is left for the user and named
-   in the PR description. The author verifies a finding before acting on
-   it: a reviewer's report is a claim like any subagent's.
+   The reviewer then re-checks the answers and the new commits. A round
+   is one review followed by the author's fixes; at most 5 rounds, and
+   fewer when a re-check finds nothing new. A finding still open after that
+   is left for the user and named in the PR description. The author
+   verifies a finding before acting on it: a reviewer's report is a claim
+   like any subagent's.
 4. **Human review.** Only after step 3 is the user asked to review. The
    user reads the PR with the findings and answers already on it and marks
    it ready for review themselves.
