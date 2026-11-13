@@ -56,6 +56,7 @@ AVAILABLE_APPS = {
         {"name": "Hiero 16.1", "key": "hiero/16-1"},
         {"name": "Hiero 17.0", "key": "hiero/17-0"},
         {"name": "Flame 2026.2", "key": "flame/2026-2"},
+        {"name": "Flame 2027", "key": "flame/2027"},
         {"name": "Resolve stable", "key": "resolve/stable"},
     ]
 }

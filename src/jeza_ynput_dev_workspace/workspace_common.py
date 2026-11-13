@@ -19,6 +19,7 @@ import click
 SCOPE_REPOS = [
     "ayon-core",
     "ayon-launcher",
+    "ayon-applications",
     "ayon-traypublisher",
     "ayon-batch-delivery",
     "ayon-batch-ingest",
